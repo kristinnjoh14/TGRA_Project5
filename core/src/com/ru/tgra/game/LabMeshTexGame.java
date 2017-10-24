@@ -27,7 +27,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private Camera cam;
 	//private Camera topCam;
 	
-	private float fov = 100.0f;
+	private float fov = 90.0f;
 
 	MeshModel model;
 
@@ -66,16 +66,8 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	}
 
-	private void input()
+	private void input(float deltaTime)
 	{
-	}
-	
-	private void update()
-	{
-		float deltaTime = Gdx.graphics.getDeltaTime();
-
-		angle += 180.0f * deltaTime;
-
 		if(Gdx.input.isKeyPressed(Input.Keys.A)) {
 			cam.slide(-3.0f * deltaTime, 0, 0);
 		}
@@ -106,18 +98,23 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			//cam.rotateY(-90.0f * deltaTime);
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.UP)) {
-			cam.pitch(-90.0f * deltaTime);
+			Vector3D down = new Vector3D(0,-1,0);
+			if(down.dot(cam.n) <= 0.99) {
+				cam.pitch(90.0f * deltaTime);
+			}
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-			cam.pitch(90.0f * deltaTime);
+			Vector3D up = new Vector3D(0,1,0);
+			if(up.dot(cam.n) <= 0.99) {
+				cam.pitch(-90.0f * deltaTime);
+			}
 		}
-
-		if(Gdx.input.isKeyPressed(Input.Keys.Q)) {
+		/*if(Gdx.input.isKeyPressed(Input.Keys.Q)) {
 			cam.roll(-90.0f * deltaTime);
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.E)) {
 			cam.roll(90.0f * deltaTime);
-		}
+		}*/
 
 		if(Gdx.input.isKeyPressed(Input.Keys.T)) {
 			fov -= 30.0f * deltaTime;
@@ -131,6 +128,14 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			Gdx.graphics.setDisplayMode(500, 500, false);
 			Gdx.app.exit();
 		}
+	}
+	
+	private void update()
+	{
+		float deltaTime = Gdx.graphics.getDeltaTime();
+		input(deltaTime);
+		angle += 180.0f * deltaTime;
+
 
 		//do all updates to the game
 	}
@@ -186,8 +191,6 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 
 	@Override
 	public void render () {
-		
-		input();
 		//put the code inside the update and display methods, depending on the nature of the code
 		update();
 		display();

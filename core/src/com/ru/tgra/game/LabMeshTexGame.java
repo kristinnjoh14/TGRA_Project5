@@ -41,7 +41,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		Gdx.input.setInputProcessor(this);
 
 		DisplayMode disp = Gdx.graphics.getDesktopDisplayMode();
-		//Gdx.graphics.setDisplayMode(disp.width, disp.height, true);
+		Gdx.graphics.setDisplayMode(disp.width, disp.height, true);
 
 		shader = new Shader();
 
@@ -62,6 +62,17 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		topCam = new Camera();
 		//orthoCam.orthographicProjection(-5, 5, -5, 5, 3.0f, 100);
 		topCam.perspectiveProjection(30.0f, 1, 3, 100);
+
+		//TODO: try this way to create a texture image
+		/*Pixmap pm = new Pixmap(128, 128, Format.RGBA8888);
+		for(int i = 0; i < pm.getWidth(); i++)
+		{
+			for(int j = 0; j < pm.getWidth(); j++)
+			{
+				pm.drawPixel(i, j, rand.nextInt());
+			}
+		}
+		tex = new Texture(pm);*/
 
 		Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	}
@@ -213,8 +224,10 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			ModelMatrix.main.addTranslation(0.0f, 4.0f, 0.0f);
 			ModelMatrix.main.addRotation(angle, new Vector3D(1,1,1));
 			shader.setModelMatrix(ModelMatrix.main.getMatrix());
-			//BoxGraphic.drawSolidCube(shader, tex);
-			model.draw(shader);
+
+			BoxGraphic.drawSolidCube(shader, tex);
+			//model.draw(shader);
+
 			ModelMatrix.main.popMatrix();
 	
 			drawPyramids();

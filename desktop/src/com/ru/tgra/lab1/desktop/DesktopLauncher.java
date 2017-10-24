@@ -15,7 +15,7 @@ public class DesktopLauncher {
 		config.height = 512;  //the window size
 		config.x = 80;
 		config.y = 80;
-		//config.fullscreen = false;
+		//config.fullscreen = true;
 		
 
 		new LwjglApplication(new LabMeshTexGame(), config);

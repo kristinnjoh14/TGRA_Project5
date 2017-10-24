@@ -225,8 +225,8 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			ModelMatrix.main.addRotation(angle, new Vector3D(1,1,1));
 			shader.setModelMatrix(ModelMatrix.main.getMatrix());
 
-			BoxGraphic.drawSolidCube(shader, tex);
-			//model.draw(shader);
+			//BoxGraphic.drawSolidCube(shader, tex);
+			model.draw(shader);
 
 			ModelMatrix.main.popMatrix();
 	

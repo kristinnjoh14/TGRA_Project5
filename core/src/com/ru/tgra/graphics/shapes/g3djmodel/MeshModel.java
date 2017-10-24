@@ -28,11 +28,11 @@ public class MeshModel {
 		{
 			ModelMatrix.main.pushMatrix();
 
-			//TODO: Translate by node.translation
+			ModelMatrix.main.addTranslation(node.translation.x, node.translation.y, node.translation.z);
 
 			ModelMatrix.main.addRotationQuaternion(node.rotation.x, node.rotation.y, node.rotation.z, node.rotation.w);
 
-			//TODO: Scale by node.scale
+			ModelMatrix.main.addScale(node.scale.x, node.scale.y, node.scale.z);
 
 			shader.setModelMatrix(ModelMatrix.main.getMatrix());
 			for(MeshModelNodePart part : node.parts)
@@ -41,6 +41,8 @@ public class MeshModel {
 
 				//TODO: use glVertexAttribPointer to activate the vertex and normal lists in part.part.mesh
 				//make sure you're reading these in 3 and 3 together, not 2 and 2 like the UV coordinates
+				Gdx.gl.glVertexAttribPointer(shader.getVertexPointer(), 3, GL20.GL_FLOAT, false, 0, part.part.mesh.vertices);
+				Gdx.gl.glVertexAttribPointer(shader.getNormalPointer(), 3, GL20.GL_FLOAT, false, 0, part.part.mesh.normals);
 
 				//if you've added textures to your shader but will not be using them here
 				//you should set the UV vertex attribute pointer to something long enough,
@@ -52,7 +54,7 @@ public class MeshModel {
 				{
 					//here you actually draw, using the index list from part.part to decide in which order the polygons are rendered
 					//TODO: uncomment the following line:
-					//Gdx.gl.glDrawElements(GL20.GL_TRIANGLES, part.part.indices.capacity(), GL20.GL_UNSIGNED_SHORT, part.part.indices);
+					Gdx.gl.glDrawElements(GL20.GL_TRIANGLES, part.part.indices.capacity(), GL20.GL_UNSIGNED_SHORT, part.part.indices);
 				}
 			}
 			ModelMatrix.main.popMatrix();

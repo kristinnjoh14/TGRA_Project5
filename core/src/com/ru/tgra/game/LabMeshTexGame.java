@@ -28,7 +28,9 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	//private Camera topCam;
 	
 	private float fov = 90.0f;
-
+	
+	//Toyota AE86(https://sketchfab.com/models/643714d31e884dcb97cfc79a838e2f7b) by Henrique_Drifter(https://sketchfab.com/Henrique_Drifter) is licensed under CC Attribution(http://creativecommons.org/licenses/by/4.0/)
+	
 	MeshModel model;
 
 	private Texture tex;
@@ -47,7 +49,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 
 		tex = new Texture(Gdx.files.internal("textures/dice.png"));
 
-		model = G3DJModelLoader.loadG3DJFromFile("superlofirolla.g3dj");
+		model = G3DJModelLoader.loadG3DJFromFile("AE86blend.g3dj");
 
 		BoxGraphic.create();
 		SphereGraphic.create();
@@ -90,11 +92,11 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		}
 
 		if(Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-			cam.yaw(-90.0f * deltaTime);
+			cam.yaw(90.0f * deltaTime);
 			//cam.rotateY(90.0f * deltaTime);
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-			cam.yaw(90.0f * deltaTime);
+			cam.yaw(-90.0f * deltaTime);
 			//cam.rotateY(-90.0f * deltaTime);
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.UP)) {

@@ -81,10 +81,10 @@ public class Camera {
 	{
 		float radians = angle * (float)Math.PI / 180.0f;
 		float c = (float)Math.cos(radians);
-		float s = -(float)Math.sin(radians);
-
+		float s = (float)Math.sin(radians);
+		
 		u.set(u.x * c + u.z * s, u.y, u.z * c - u.x * s);
-		n.set(n.x * c + n.z* s, n.y, n.z * c - n.x * s);
+		n.set(n.x * c + n.z * s, n.y, n.z * c - n.x * s);
 		v.set(v.x * c + v.z * s, v.y, v.z * c - v.x * s);
 	}
 

@@ -92,6 +92,7 @@ public class BoxGraphic {
 
 		//UV TEXTURE COORD ARRAY IS FILLED HERE
 		float[] uvArray = {
+							//Some indexes are slightly off to get rid of ugly black lines at the seams
 							0.6667f, 0.3333f,	//Back
 							0.6667f, 0.0f,	
 							1, 0.0f,
@@ -102,20 +103,20 @@ public class BoxGraphic {
 							0.3333f, 0.3333f,	
 							0.3333f, 0.6667f,	
 							
-							0.6667f, 1,			//Bottom
-							0.3333f, 1,			
-							0.3333f, 0.6667f,
-							0.6667f, 0.6667f,	
+							0.666f, 1,			//Bottom
+							0.334f, 1,			
+							0.334f, 0.6667f,
+							0.666f, 0.6667f,	
 							
-							0.6667f, 0.0f,		//Top
-							0.3333f, 0.0f,
-							0.3333f, 0.3333f,	
-							0.6667f, 0.3333f,
+							0.666f, 0.0f,		//Top
+							0.334f, 0.0f,
+							0.334f, 0.334f,	
+							0.666f, 0.334f,
 								
-							1, 0.6667f,			//Right
-							0.6667f, 0.6667f,	
-							0.6667f, 0.3333f,
-							1, 0.3333f,
+							1, 0.666f,			//Right
+							0.6667f, 0.666f,	
+							0.6667f, 0.334f,
+							1, 0.334f,
 							
 							0.0f, 0.6667f,		//Left
 							0.3333f, 0.6667f,

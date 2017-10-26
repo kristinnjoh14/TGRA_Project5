@@ -29,11 +29,10 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	
 	private float fov = 90.0f;
 	
-	//Toyota AE86(https://sketchfab.com/models/643714d31e884dcb97cfc79a838e2f7b) by Henrique_Drifter(https://sketchfab.com/Henrique_Drifter) is licensed under CC Attribution(http://creativecommons.org/licenses/by/4.0/)
-	
-	MeshModel model;
-
-	private Texture tex;
+	//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) by Victor Faria(https://sketchfab.com/IamBiscoito) is licensed under CC Attribution(http://creativecommons.org/licenses/by/4.0/)
+	MeshModel corolla;
+	Texture sphereDiff;
+	Texture skyBox;
 	
 	Random rand = new Random();
 
@@ -43,13 +42,13 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		Gdx.input.setInputProcessor(this);
 
 		DisplayMode disp = Gdx.graphics.getDesktopDisplayMode();
-		Gdx.graphics.setDisplayMode(disp.width, disp.height, true);
+		Gdx.graphics.setDisplayMode(disp.width, disp.height, false);
 
 		shader = new Shader();
+		
+		skyBox = new Texture(Gdx.files.internal("textures/cloudySeaBinary.jpg"));
 
-		tex = new Texture(Gdx.files.internal("textures/dice.png"));
-
-		model = G3DJModelLoader.loadG3DJFromFile("AE86blend.g3dj");
+		corolla = G3DJModelLoader.loadG3DJFromFile("AE86smooth.g3dj");
 
 		BoxGraphic.create();
 		SphereGraphic.create();
@@ -158,7 +157,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		
-		cam.perspectiveProjection(fov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 100.0f);
+		cam.perspectiveProjection(fov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 130.0f);
 		shader.setViewMatrix(cam.getViewMatrix());
 		shader.setProjectionMatrix(cam.getProjectionMatrix());
 		shader.setEyePosition(cam.eye.x, cam.eye.y, cam.eye.z, 1.0f);
@@ -185,9 +184,17 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		ModelMatrix.main.pushMatrix();
 		ModelMatrix.main.addTranslation(0.0f, 4.0f, 0.0f);
 		shader.setModelMatrix(ModelMatrix.main.getMatrix());
+		//SphereGraphic.drawSolidSphere(shader, sphereDiff, sphereDiff);
+		corolla.draw(shader);
 
-		model.draw(shader);
-
+		ModelMatrix.main.popMatrix();
+		
+		ModelMatrix.main.pushMatrix();
+		ModelMatrix.main.addTranslation(cam.eye.x, cam.eye.y, cam.eye.z);
+		ModelMatrix.main.addScale(150, 150, 150);
+		shader.setModelMatrix(ModelMatrix.main.getMatrix());
+		BoxGraphic.drawSolidCube(shader, skyBox);
+		
 		ModelMatrix.main.popMatrix();
 	}
 

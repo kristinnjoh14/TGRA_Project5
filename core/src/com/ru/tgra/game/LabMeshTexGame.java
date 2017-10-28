@@ -29,14 +29,44 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	
 	//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) by Victor Faria(https://sketchfab.com/IamBiscoito) is licensed under CC Attribution(http://creativecommons.org/licenses/by/4.0/)
 	MeshModel corolla;
-	Texture sphereDiff;
+	Texture road;
 	Texture skyBox;
-	
+	float[] roadUV = {
+			0,0,
+			0,0,
+			0,0,
+			0,0,
+			
+			0,0,
+			0,0,
+			0,0,
+			0,0,
+			
+			0,0,
+			0,0,
+			0,0,
+			0,0,
+			
+			0,0,
+			1,0,
+			1,1,
+			0,1,
+			
+			0,0,
+			0,0,
+			0,0,
+			0,0,
+			
+			0,0,
+			0,0,
+			0,0,
+			0,0,
+	};
 	Random rand = new Random();
 
 	@Override
 	public void create () {
-
+		
 		Gdx.input.setInputProcessor(this);
 
 		DisplayMode disp = Gdx.graphics.getDesktopDisplayMode();
@@ -45,6 +75,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		shader = new Shader();
 		
 		skyBox = new Texture(Gdx.files.internal("textures/cloudySeaBinary.jpg"));
+		road = new Texture(Gdx.files.internal("textures/road.jpg"));
 
 		corolla = G3DJModelLoader.loadG3DJFromFile("AE86smooth.g3dj");
 
@@ -168,7 +199,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		shader.setLinearAttenuation(0.01f);
 		shader.setQuadraticAttenuation(0.1f);
 
-		shader.setLightColor(1.0f, 1.0f, 1.0f, 1.0f);
+		shader.setLightColor(0.8f, 0.7f, 0.65f, 1.0f);
 		
 		shader.setGlobalAmbient(0.3f, 0.3f, 0.3f, 1);
 
@@ -178,7 +209,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		shader.setShininess(50.0f);
 
 		ModelMatrix.main.pushMatrix();
-		ModelMatrix.main.addTranslation(0.0f, 4.0f, 0.0f);
+		ModelMatrix.main.addTranslation(0.0f, 0.0f, 0.0f);
 		shader.setModelMatrix(ModelMatrix.main.getMatrix());
 		corolla.draw(shader);
 
@@ -190,6 +221,15 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		shader.setModelMatrix(ModelMatrix.main.getMatrix());
 		BoxGraphic.drawSolidCube(shader, skyBox);
 		
+		ModelMatrix.main.popMatrix();
+		
+		ModelMatrix.main.pushMatrix();
+		ModelMatrix.main.addTranslation(0, -2, 0);
+		ModelMatrix.main.addScale(30, 1, 30);
+		shader.setModelMatrix(ModelMatrix.main.getMatrix());
+		BoxGraphic.setUVArray(roadUV);
+		BoxGraphic.drawSolidCube(shader, road);
+		BoxGraphic.defaultUVArray();
 		ModelMatrix.main.popMatrix();
 	}
 

@@ -90,43 +90,7 @@ public class BoxGraphic {
 		normalBuffer.rewind();
 
 
-		//UV TEXTURE COORD ARRAY IS FILLED HERE
-		float[] uvArray = {
-							//Some indexes are slightly off to get rid of ugly black lines at the seams
-							0.667f, 0.3333f,	//Back
-							0.667f, 0.0f,	
-							1, 0.0f,
-							1, 0.3333f,			
-							
-							0.6667f, 0.6667f,	//Front
-							0.6667f, 0.3333f,
-							0.3333f, 0.3333f,	
-							0.3333f, 0.6667f,	
-							
-							0.666f, 1,			//Bottom
-							0.334f, 1,			
-							0.334f, 0.6667f,
-							0.666f, 0.6667f,	
-							
-							0.666f, 0.0f,		//Top
-							0.334f, 0.0f,
-							0.334f, 0.334f,	
-							0.666f, 0.334f,
-								
-							1, 0.666f,			//Right
-							0.6667f, 0.666f,	
-							0.6667f, 0.334f,
-							1, 0.334f,
-							
-							0.0f, 0.6667f,		//Left
-							0.3333f, 0.6667f,
-							0.3333f, 0.3333f,
-							0.0f, 0.3333f,
-						};
-
-		uvBuffer = BufferUtils.newFloatBuffer(48);
-		BufferUtils.copy(uvArray, 0, uvBuffer, 48);
-		uvBuffer.rewind();
+		defaultUVArray();
 
 
 		//INDEX ARRAY IS FILLED HERE
@@ -141,6 +105,56 @@ public class BoxGraphic {
 		BufferUtils.copy(indexArray, 0, indexBuffer, 36);
 		indexBuffer.rewind();
 
+	}
+	
+	public static void defaultUVArray() {
+		//UV TEXTURE COORD ARRAY IS FILLED HERE
+				float[] uvArray = {
+									//Some indexes are slightly off to get rid of ugly black lines at the seams
+									0.667f, 0.3333f,	//Back
+									0.667f, 0.0f,	
+									1, 0.0f,
+									1, 0.3333f,			
+									
+									0.6667f, 0.6667f,	//Front
+									0.6667f, 0.3333f,
+									0.3333f, 0.3333f,	
+									0.3333f, 0.6667f,	
+									
+									0.666f, 1,			//Bottom
+									0.334f, 1,			
+									0.334f, 0.6667f,
+									0.666f, 0.6667f,	
+									
+									0.666f, 0.0f,		//Top
+									0.334f, 0.0f,
+									0.334f, 0.334f,	
+									0.666f, 0.334f,
+										
+									1, 0.666f,			//Right
+									0.6667f, 0.666f,	
+									0.6667f, 0.334f,
+									1, 0.334f,
+									
+									0.0f, 0.6667f,		//Left
+									0.3333f, 0.6667f,
+									0.3333f, 0.3333f,
+									0.0f, 0.3333f,
+								};
+
+				uvBuffer = BufferUtils.newFloatBuffer(48);
+				BufferUtils.copy(uvArray, 0, uvBuffer, 48);
+				uvBuffer.rewind();
+		
+		uvBuffer = BufferUtils.newFloatBuffer(48);
+		BufferUtils.copy(uvArray, 0, uvBuffer, 48);
+		uvBuffer.rewind();
+	}
+	
+	public static void setUVArray(float[] uv) {
+		uvBuffer = BufferUtils.newFloatBuffer(48);
+		BufferUtils.copy(uv, 0, uvBuffer, 48);
+		uvBuffer.rewind();
 	}
 
 	public static void drawSolidCube(Shader shader, Texture diffuseTexture) {

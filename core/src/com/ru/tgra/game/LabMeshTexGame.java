@@ -24,10 +24,22 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 
 	private Camera cam;
 	//private Camera topCam;
-	
-	private float fov = 90.0f;
-	
-	//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) by Victor Faria(https://sketchfab.com/IamBiscoito) is licensed under CC Attribution(http://creativecommons.org/licenses/by/4.0/)
+	private Point3D carPos;			//The position of the car
+	private Vector3D carVelocity;	//The velocity of the car
+	private Vector3D carOrientation;//The orientation of the car
+	private float acceleration[];	//The acceleration of gears 1-5, reverse and braking, gears 1-5 are approximated, but realistic
+	private int topSpeed[];			//The estimated top speed of each gear, scaled to fit world units
+	private float diffRatio;		//A scalar by which to multiply acceleration, much like how gear ratios and drive ratios work in real life
+	private float shiftTime;		//A constant up to which to count when shifting gears
+	private float shift;			//A counter used to stop acceleration while shifting gears
+	private boolean shifting;		//A boolean that is on when shifting gears and off otherwise
+	private int previousGear;		//Index of previous gear used to figure out whether or not to do a shift timeout
+	private float normalfov = 90.0f;//Initialization value for camera fov
+	private float fov = normalfov;		//Camera field of view
+
+	//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) 
+	//by Victor Faria(https://sketchfab.com/IamBiscoito) 
+	//is licensed under CC Attribution(http://creativecommons.org/licenses/by/4.0/)
 	MeshModel corolla;
 	Texture road;
 	Texture skyBox;
@@ -66,6 +78,21 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 
 	@Override
 	public void create () {
+		carPos = new Point3D(0,0,0);
+		carVelocity = new Vector3D(0,0,0);
+		carOrientation = new Vector3D(0,0,1);
+		
+		acceleration = new float[] {
+			3.6f,2.1f,1.4f,1,0.86f,-4,-25
+		};
+		topSpeed = new int[] {
+			20,34,51,72,84,19,14,14,14
+		};
+		diffRatio = 2.5f;
+		
+		shiftTime = 0.35f;
+		shifting = true;
+		previousGear = -1;
 		
 		Gdx.input.setInputProcessor(this);
 
@@ -95,7 +122,58 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 
 		Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	}
-
+	
+	private void accelerate(Boolean gas, int gear) {
+		if(gas) {
+			if(carOrientation.dot(carVelocity) < 0) {	//If braking from reversing
+				//Scale change to velocity by braking force, stored after reverse gear gear
+				carOrientation.scale(acceleration[6]*Gdx.graphics.getDeltaTime());
+				carOrientation.scale(-1);
+				carVelocity.add(carOrientation);
+				carOrientation.normalize();
+				if(carVelocity.length() < 3) {
+					carVelocity.scale(0);
+				}
+			} else {	//If accelerating
+				//Accelerate given the current gear in the direction the car is pointed in
+				if(fov < normalfov + 40) {
+					fov += Gdx.graphics.getDeltaTime()*5;
+				}
+				carOrientation.scale(acceleration[gear]*Gdx.graphics.getDeltaTime()*diffRatio);
+				carVelocity.add(carOrientation);
+				if(carVelocity.length() > topSpeed[4]) {
+					carVelocity.normalize();
+					carVelocity.scale(topSpeed[4]);
+				}
+				//Set length of the orientation vector to 1 again
+				carOrientation.normalize();
+			}
+		} else {
+			if(carOrientation.dot(carVelocity) > 0) {	//If braking
+				//Scale change to velocity by braking force, stored after reverse gear gear
+				if(fov > normalfov) {
+					fov -= Gdx.graphics.getDeltaTime()*5;
+				}
+				carOrientation.scale(acceleration[6]*Gdx.graphics.getDeltaTime());
+				carVelocity.add(carOrientation);
+				carOrientation.scale(-1);
+				carOrientation.normalize();
+				if(carVelocity.length() < 3) {
+					carVelocity.scale(0);
+				}
+			} else {	//If reversing
+				//Scale change to velocity by reverse gear, stored after 5th gear
+				carOrientation.scale(acceleration[5]*Gdx.graphics.getDeltaTime()*diffRatio);
+				carVelocity.add(carOrientation);
+				carOrientation.scale(-1);
+				carOrientation.normalize();
+				if(carVelocity.length() > topSpeed[5]) {
+					carVelocity.normalize();
+					carVelocity.scale(topSpeed[5]);
+				}
+			}
+		}
+	}
 	private void input(float deltaTime)
 	{
 		if(Gdx.input.isKeyPressed(Input.Keys.A)) {
@@ -105,12 +183,24 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			cam.slide(3.0f * deltaTime, 0, 0);
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.W)) {
-			cam.slide(0, 0, -3.0f * deltaTime);
-			//cam.walkForward(3.0f * deltaTime);
+			if(!shifting) {
+				//Determine current gear index
+				int gear = 0;
+				for(int i = 4; i > -1; i--) {
+					if(carVelocity.length() < topSpeed[i]) {
+						gear = i;
+					}
+				}
+				if(gear != previousGear) {
+					System.out.println(carVelocity.length() + " " + gear);
+					shifting = true;
+				}
+				accelerate(true, gear);
+				previousGear = gear;
+			}
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.S)) {
-			cam.slide(0, 0, 3.0f * deltaTime);
-			//cam.walkForward(-3.0f * deltaTime);
+			accelerate(false, 5);
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.R)) {
 			cam.slide(0, 3.0f * deltaTime, 0);
@@ -166,8 +256,20 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		input(deltaTime);
 
 		//do all updates to the game
+		Vector3D tmp = new Vector3D(carVelocity.x*deltaTime, carVelocity.y*deltaTime, carVelocity.z*deltaTime);
+		carPos.add(tmp);
+		if(shifting) {
+			shift += deltaTime;
+			System.out.println(shift);
+			if(fov > normalfov) {
+				fov -= deltaTime*12;
+			}
+			if(shift >= shiftTime) {
+				shifting = false;
+				shift = 0;
+			}
+		}
 	}
-	
 	private void display()
 	{
 		//do all actual drawing and rendering here
@@ -184,7 +286,8 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		
-		cam.perspectiveProjection(fov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 130.0f);
+		cam.perspectiveProjection(fov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 400.0f);
+		cam.look(new Point3D(carPos.x, carPos.y + 2, carPos.z - 5), carPos, new Vector3D(0,1,0));
 		shader.setViewMatrix(cam.getViewMatrix());
 		shader.setProjectionMatrix(cam.getProjectionMatrix());
 		shader.setEyePosition(cam.eye.x, cam.eye.y, cam.eye.z, 1.0f);
@@ -208,13 +311,16 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		shader.setMaterialEmission(0, 0, 0, 1);
 		shader.setShininess(50.0f);
 
+		//Draw car
 		ModelMatrix.main.pushMatrix();
-		ModelMatrix.main.addTranslation(0.0f, 0.0f, 0.0f);
+		ModelMatrix.main.addTranslation(carPos.x, carPos.y, carPos.z);
+		ModelMatrix.main.addScale(0.5f, 0.5f, 0.5f);
 		shader.setModelMatrix(ModelMatrix.main.getMatrix());
 		corolla.draw(shader);
 
 		ModelMatrix.main.popMatrix();
 		
+		//Draw skybox
 		ModelMatrix.main.pushMatrix();
 		ModelMatrix.main.addTranslation(cam.eye.x, cam.eye.y, cam.eye.z);
 		ModelMatrix.main.addScale(150, 150, 150);
@@ -223,16 +329,16 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		
 		ModelMatrix.main.popMatrix();
 		
+		//Draw road
 		ModelMatrix.main.pushMatrix();
-		ModelMatrix.main.addTranslation(0, -2, 0);
-		ModelMatrix.main.addScale(30, 1, 30);
+		ModelMatrix.main.addTranslation(0, -2, 800);
+		ModelMatrix.main.addScale(1600, 1, 1600);
 		shader.setModelMatrix(ModelMatrix.main.getMatrix());
 		BoxGraphic.setUVArray(roadUV);
 		BoxGraphic.drawSolidCube(shader, road);
 		BoxGraphic.defaultUVArray();
 		ModelMatrix.main.popMatrix();
 	}
-
 	@Override
 	public void render () {
 		//put the code inside the update and display methods, depending on the nature of the code
@@ -240,6 +346,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		display();
 
 	}
+	
 
 	@Override
 	public boolean keyDown(int keycode) {

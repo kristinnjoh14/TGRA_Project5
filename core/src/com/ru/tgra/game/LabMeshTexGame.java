@@ -190,12 +190,19 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			}
 		}
 	}
-	private void driftBoost(float boost) {
-		//TODO:implement boost
+	private void driftBoost() {
+		carOrientation.scale(accumulatedDriftLoss*Gdx.graphics.getDeltaTime());
+		if(fov < normalfov+40) {
+			fov += carOrientation.length();
+		}
+		accumulatedDriftLoss -= carOrientation.length();
+		carSpeed.add(carOrientation);
+		carOrientation.normalize();
+		System.out.println(accumulatedDriftLoss);
 	}
 	private void turn(float steeringAngle) {
 		if(carSpeed.length() < 6) {
-			steeringAngle = (steeringAngle/Math.abs(steeringAngle))*carSpeed.length()/topSpeed[0];
+			steeringAngle = (steeringAngle/Math.abs(steeringAngle))*carSpeed.length()/17;
 		}
 		if(carSpeed.length() == 0)
 			steeringAngle = 0;
@@ -206,16 +213,18 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		float z = carOrientation.z;
 		carOrientation.x = cos*x + sin*z;
 		carOrientation.z = -sin*x + cos*z;
-		if(carSpeed.length() > minDriftSpeed) {
-			steeringAngle = Math.min(steeringAngle, steeringAngle/((carSpeed.length()-minDriftSpeed)/4));
-			radians = steeringAngle * (float)Math.PI / 180.0f;
-			cos = (float)Math.cos(radians);
-			sin = -(float)Math.sin(radians);
+		if(!drifting) {
+			if(carSpeed.length() > minDriftSpeed) {
+				steeringAngle = Math.min(steeringAngle, steeringAngle/((carSpeed.length()-minDriftSpeed)/4));
+				radians = steeringAngle * (float)Math.PI / 180.0f;
+				cos = (float)Math.cos(radians);
+				sin = -(float)Math.sin(radians);
+			}
+			x = carSpeed.x;
+			z = carSpeed.z;
+			carSpeed.x = cos*x + sin*z;
+			carSpeed.z = -sin*x + cos*z;
 		}
-		x = carSpeed.x;
-		z = carSpeed.z;
-		carSpeed.x = cos*x + sin*z;
-		carSpeed.z = -sin*x + cos*z;
 	}
 	private void input(float deltaTime)
 	{
@@ -311,6 +320,8 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				tmp.scale(acceleration[7]*deltaTime);	//Scale deceleration by drift-grip, stored after braking force
 				carSpeed.add(tmp);
 				accumulatedDriftLoss += tmp.length();
+			} else {
+				drifting = false;
 			}
 		}
 		//Move car along carVelocity
@@ -337,9 +348,8 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				fov += deltaTime*3;
 			}
 		}
-		if(!drifting & wasDrifting) {
-			driftBoost(accumulatedDriftLoss);
-			accumulatedDriftLoss = 0;
+		if(!drifting & accumulatedDriftLoss > 0) {
+			driftBoost();
 		}
 		wasDrifting = drifting;
 	}

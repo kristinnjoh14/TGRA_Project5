@@ -89,7 +89,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		maximumSteeringAngle = 60;
 
 		acceleration = new float[] {
-			3.6f,2.1f,1.4f,1,0.86f,-4,-25,-10
+			3.6f,2.1f,1.4f,1,0.86f,-4,-25,-20
 		};
 		topSpeed = new int[] {
 			20,34,51,72,84,19,14,14,14
@@ -219,10 +219,11 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	}
 	private void driftBoost() {
 		carOrientation.scale(accumulatedDriftLoss*Gdx.graphics.getDeltaTime());
+		accumulatedDriftLoss -= carOrientation.length();
+		carOrientation.scale(0.5f);
 		if(fov < normalfov+40) {
 			fov += carOrientation.length();
 		}
-		accumulatedDriftLoss -= carOrientation.length();
 		carSpeed.add(carOrientation);
 		carOrientation.normalize();
 		//System.out.println("Boost" + accumulatedDriftLoss);

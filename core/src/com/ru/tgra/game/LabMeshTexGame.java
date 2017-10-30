@@ -132,7 +132,30 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	}
 	
-	private float targetSteeringAngleBySpeed() {
+	private void shift(float deltaTime) {	//timeout until deltaTime accumulates 0.35 (350 milliseconds)
+		if(shifting) {
+			shift += deltaTime;
+			if(fov > normalfov) {
+				fov -= deltaTime*12;
+			}
+			if(shift >= shiftTime) {
+				shifting = false;
+				shift = 0;
+			}
+		}
+	}
+	private void updateFov(float deltaTime) {
+		if(targetFovBySpeed() - fov < 0) {
+			if(targetFovBySpeed() - fov < -2) {
+				fov -= deltaTime*3;
+			}
+		} else {
+			if(targetFovBySpeed() - fov > 2) {
+				fov += deltaTime*3;
+			}
+		}
+	}
+ 	private float targetSteeringAngleBySpeed() {
 		//TODO: return steering angle between maximumSteeringAngle and some minimum depending on speed
 		return 30;
 	}
@@ -230,7 +253,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			x = carSpeed.x;
 			z = carSpeed.z;
 			carSpeed.x = cos*x + sin*z;
-			carSpeed.z = -sin*x + cos*z;
+			carSpeed.z = sin*x + cos*z;
 		}
 	}
 	private void input(float deltaTime)
@@ -284,7 +307,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		if(len > 0) {
 			tmp.normalize();
 			dot = tmp.dot(carOrientation);
-			if(dot < 0.95) {
+			if(dot < 0.9 & dot > -0.5) {
 				drifting = true;
 				tmp.scale(acceleration[7]*deltaTime);	//Scale deceleration by drift-grip, stored after braking force
 				carSpeed.add(tmp);
@@ -293,6 +316,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				if(gripping) {
 					carSpeed.set(carOrientation.x, carOrientation.y, carOrientation.z);
 					carSpeed.scale(len);
+					carSpeed.scale(dot);
 				}
 				drifting = false;
 			}
@@ -301,26 +325,9 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		tmp = new Vector3D(carSpeed.x, carSpeed.y, carSpeed.z);
 		tmp.scale(deltaTime);
 		carPos.add(tmp);
-		if(shifting) {	//timeout until deltaTime accumulates 0.35 (350 milliseconds)
-			shift += deltaTime;
-			if(fov > normalfov) {
-				fov -= deltaTime*12;
-			}
-			if(shift >= shiftTime) {
-				shifting = false;
-				shift = 0;
-			}
-		}
+		shift(deltaTime);	//Timeout if changing gears
 		//Slowly set camera to the fov of the current speed
-		if(targetFovBySpeed() - fov < 0) {
-			if(targetFovBySpeed() - fov < -2) {
-				fov -= deltaTime*3;
-			}
-		} else {
-			if(targetFovBySpeed() - fov > 2) {
-				fov += deltaTime*3;
-			}
-		}
+		updateFov(deltaTime);
 		if(!drifting & accumulatedDriftLoss > 0) {
 			if(accumulatedDriftLoss < 1) {
 				accumulatedDriftLoss = 0;

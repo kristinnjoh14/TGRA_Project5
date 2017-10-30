@@ -202,7 +202,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		accumulatedDriftLoss -= carOrientation.length();
 		carSpeed.add(carOrientation);
 		carOrientation.normalize();
-		System.out.println("Boost" + accumulatedDriftLoss);
+		//System.out.println("Boost" + accumulatedDriftLoss);
 	}
 	private void turn(float steeringAngle) {
 		if(carSpeed.length() < 6) {
@@ -290,6 +290,10 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				carSpeed.add(tmp);
 				accumulatedDriftLoss += tmp.length();
 			} else {
+				if(gripping) {
+					carSpeed.set(carOrientation.x, carOrientation.y, carOrientation.z);
+					carSpeed.scale(len);
+				}
 				drifting = false;
 			}
 		}
@@ -318,9 +322,15 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			}
 		}
 		if(!drifting & accumulatedDriftLoss > 0) {
-			driftBoost();
+			if(accumulatedDriftLoss < 1) {
+				accumulatedDriftLoss = 0;
+			} else {
+				driftBoost();
+			}
 		}
 		gripping = true;
+		System.out.print(dot+" : ");
+		System.out.println(carSpeed.length());
 	}
 	private void display()
 	{

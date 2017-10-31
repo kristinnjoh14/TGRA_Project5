@@ -131,7 +131,20 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 
 		Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	}
-	
+	private void maybeBoost(float deltaTime) {
+		if(!drifting & accumulatedDriftLoss > 0) {
+			if(accumulatedDriftLoss < 1) {
+				accumulatedDriftLoss = 0;
+			} else {
+				driftBoost();
+			}
+		}
+	}
+	private void moveCar(float deltaTime) {
+		Vector3D tmp = new Vector3D(carSpeed.x, carSpeed.y, carSpeed.z);
+		tmp.scale(deltaTime);
+		carPos.add(tmp);
+	}
 	private void shift(float deltaTime) {	//timeout until deltaTime accumulates 0.35 (350 milliseconds)
 		if(shifting) {
 			shift += deltaTime;
@@ -253,8 +266,11 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			}
 			x = carSpeed.x;
 			z = carSpeed.z;
+			float len = carSpeed.length();
 			carSpeed.x = cos*x + sin*z;
-			carSpeed.z = sin*x + cos*z;
+			carSpeed.z = sin*x + cos*z;	//Sine should be negative, but that somehow breaks initiating a drift to the left? Workaround hopefully temporary
+			carSpeed.normalize();
+			carSpeed.scale(len);
 		}
 	}
 	private void input(float deltaTime)
@@ -322,21 +338,11 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				drifting = false;
 			}
 		}
-		//Move car along carVelocity
-		tmp = new Vector3D(carSpeed.x, carSpeed.y, carSpeed.z);
-		tmp.scale(deltaTime);
-		carPos.add(tmp);
-		shift(deltaTime);	//Timeout if changing gears
-		//Slowly set camera to the fov of the current speed
-		updateFov(deltaTime);
-		if(!drifting & accumulatedDriftLoss > 0) {
-			if(accumulatedDriftLoss < 1) {
-				accumulatedDriftLoss = 0;
-			} else {
-				driftBoost();
-			}
-		}
-		gripping = true;
+		moveCar(deltaTime);		//Move car along carVelocity
+		shift(deltaTime);		//Timeout if changing gears
+		updateFov(deltaTime);	//Slowly set camera to the fov of the current speed
+		maybeBoost(deltaTime);	//Apply the accumulated drift loss as boost if rear end has just been stabilized after a drift
+		gripping = true;		//Reset the grip bool for the next frame
 		System.out.print(dot+" : ");
 		System.out.println(carSpeed.length());
 	}

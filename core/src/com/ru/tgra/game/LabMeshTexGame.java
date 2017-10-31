@@ -259,7 +259,8 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		carOrientation.z = -sin*x + cos*z;
 		if(!drifting) {
 			if(carSpeed.length() > minDriftSpeed & !gripping) {
-				steeringAngle = Math.min(steeringAngle, steeringAngle/((carSpeed.length()-minDriftSpeed)/4));
+				steeringAngle = Math.min(steeringAngle, steeringAngle/((carSpeed.length()-minDriftSpeed)/4));	
+				//TODO: fix min call to be minimum of absolute value or something, that's why it can't drift to the left
 				radians = steeringAngle * (float)Math.PI / 180.0f;
 				cos = (float)Math.cos(radians);
 				sin = -(float)Math.sin(radians);
@@ -267,11 +268,20 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			x = carSpeed.x;
 			z = carSpeed.z;
 			float len = carSpeed.length();
-			carSpeed.x = cos*x + sin*z;
+			carSpeed.x = cos*x + sin*z;	//TODO: refactor to use turnVector function
 			carSpeed.z = sin*x + cos*z;	//Sine should be negative, but that somehow breaks initiating a drift to the left? Workaround hopefully temporary
 			carSpeed.normalize();
 			carSpeed.scale(len);
 		}
+	}
+	private void turnVector(Vector3D v, float angle) {
+		float radians = angle * (float)Math.PI / 180.0f;
+		float cos = (float)Math.cos(radians);
+		float sin = -(float)Math.sin(radians);
+		float x = v.x;
+		float z = v.z;
+		v.x = cos*x + sin*z;
+		v.z = -sin*x + cos*z;
 	}
 	private void input(float deltaTime)
 	{
@@ -317,7 +327,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	{
 		float deltaTime = Gdx.graphics.getDeltaTime();
 		input(deltaTime);
-		//TODO: Decelerate and perhaps turn carVelocity while drifting
+		//TODO: Turn carVelocity while drifting. Also, refactor once there is no need for the debug print lines
 		Vector3D tmp = new Vector3D(carSpeed.x, carSpeed.y, carSpeed.z);
 		float dot = 0;
 		float len = tmp.length();

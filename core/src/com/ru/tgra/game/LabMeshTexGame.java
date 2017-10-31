@@ -23,7 +23,8 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	Shader shader;
 
 	private Camera cam;
-	//private Camera topCam;
+	//private Camera topCam;		//Hypothetical future roadmap
+	
 	private Point3D carPos;			//The position of the car
 	private Vector3D carSpeed;	//The velocity of the car
 	private Vector3D carOrientation;//The orientation of the car
@@ -41,7 +42,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private float maximumSteeringAngle;	//The angle by which to steer the car. Could be a maximum if input weren't binary
 	private float minDriftSpeed;	//Minimum driving speed to initiate a drift
 	private boolean drifting;		//A boolean that is on while drifting and off otherwise
-	private boolean gripping;	//A boolean that is on while the user intends to drift. This increases maximum steering angle, despite a lack of grip
+	private boolean gripping;	//A boolean that is on while the user intends to drift. This increases maximum steering angle, despite a lack of "grip"
 	private float accumulatedDriftBoost;	//A counter that adds up all the speed you've lost to friction, a fraction of
 										//which multiplied by a scalar will be re-applied to the car as a boost
 	//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) 
@@ -517,5 +518,4 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	public boolean scrolled(int amount) {
 		return false;
 	}
-
 }

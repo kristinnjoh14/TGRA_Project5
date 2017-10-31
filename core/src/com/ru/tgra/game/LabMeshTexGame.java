@@ -279,18 +279,10 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			maybeBoost(deltaTime);
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.A)) {
-			if(carSpeed.dot(carOrientation)<0) {
-				turn(targetSteeringAngleBySpeed()*deltaTime);
-			} else {
-				turn(-targetSteeringAngleBySpeed()*deltaTime);
-			}
+			turn(-targetSteeringAngleBySpeed()*deltaTime);	//TODO: Fix reversing steering direction
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.D)) {
-			if(carSpeed.dot(carOrientation)<0) {
-				turn(-targetSteeringAngleBySpeed()*deltaTime);
-			} else {
-				turn(targetSteeringAngleBySpeed()*deltaTime);
-			}
+			turn(targetSteeringAngleBySpeed()*deltaTime);
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.W)) {
 			if(!shifting) {
@@ -385,11 +377,15 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		if(len > 0) {
 			tmp.normalize();
 			dot = tmp.dot(carOrientation);
-			if(dot < 0.9 & dot > -0.95) {
+			if(dot < 0.9 & dot > -0.5) {
 				drifting = true;
 				tmp.scale(acceleration[7]*deltaTime);	//Scale deceleration by drift-grip, stored after braking force
-				carSpeed.add(tmp);
-				//turnVector(carSpeed, dot*targetSteeringAngleBySpeed()*deltaTime);	//TODO: figure out which direction to correct drift yaw and do it
+				if(carSpeed.length() < 1) {
+					carSpeed.set(0,0,0);
+				} else {
+					carSpeed.add(tmp);
+				}
+				//turnVector(carSpeed, dot*targetSteeringAngleBySpeed()*deltaTime);	//TODO: figure out which direction to correct drift speed and do it
 				accumulatedDriftBoost += tmp.length()*boostGain;
 			} else {
 				if(gripping) {
@@ -423,7 +419,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		
-		cam.perspectiveProjection(fov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 400.0f);
+		cam.perspectiveProjection(fov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 700.0f);
 		cam.look(new Point3D(carPos.x-carOrientation.x*5, carPos.y+2, carPos.z-carOrientation.z*5), carPos, new Vector3D(0,1,0));
 		shader.setViewMatrix(cam.getViewMatrix());
 		shader.setProjectionMatrix(cam.getProjectionMatrix());
@@ -447,6 +443,14 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		shader.setMaterialSpecular(1.0f, 1.0f, 1.0f, 1.0f);
 		shader.setMaterialEmission(0, 0, 0, 1);
 		shader.setShininess(50.0f);
+		
+		//Draw skybox
+		ModelMatrix.main.pushMatrix();
+		ModelMatrix.main.addTranslation(cam.eye.x, cam.eye.y, cam.eye.z);
+		ModelMatrix.main.addScale(800, 800, 800);
+		shader.setModelMatrix(ModelMatrix.main.getMatrix());
+		BoxGraphic.drawSolidCube(shader, skyBox);
+		ModelMatrix.main.popMatrix();
 
 		//Draw car
 		float angle = (float)((180/Math.PI)*Math.acos(carOrientation.dot(new Vector3D(0,0,1))));

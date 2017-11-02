@@ -1,6 +1,5 @@
 package com.ru.tgra.game;
 
-
 import java.util.Random;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -19,12 +18,9 @@ import com.ru.tgra.graphics.shapes.g3djmodel.G3DJModelLoader;
 import com.ru.tgra.graphics.shapes.g3djmodel.MeshModel;
 
 public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor {
-
 	Shader shader;
-
 	private Camera cam;
 	//private Camera topCam;			//Hypothetical future roadmap
-	
 	private Point3D carPos;				//The position of the car
 	private Vector3D carSpeed;			//The velocity of the car
 	private Vector3D carOrientation;	//The orientation of the car
@@ -472,6 +468,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		ModelMatrix.main.pushMatrix();
 		ModelMatrix.main.addTranslation(0, -2, 0);
 		ModelMatrix.main.addScale(50, 1, 50);
+		ModelMatrix.main.addRotationY(180);
 		shader.setModelMatrix(ModelMatrix.main.getMatrix());
 		BoxGraphic.setUVArray(roadUV);
 		BoxGraphic.drawSolidCube(shader, road);

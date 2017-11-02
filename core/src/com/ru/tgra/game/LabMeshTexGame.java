@@ -23,32 +23,31 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	Shader shader;
 
 	private Camera cam;
-	//private Camera topCam;		//Hypothetical future roadmap
+	//private Camera topCam;			//Hypothetical future roadmap
 	
-	private Point3D carPos;			//The position of the car
-	private Vector3D carSpeed;	//The velocity of the car
-	private Vector3D carOrientation;//The orientation of the car
-	private float acceleration[];	//The acceleration of gears 1-5, reverse and braking, gears 1-5 are approximated, but realistic
-	private int topSpeed[];			//The estimated top speed of each gear, scaled to fit world units
-	private float diffRatio;		//A scalar by which to multiply acceleration, much like how gear ratios and drive ratios work in real life
-	private float shiftTime;		//A constant up to which to count when shifting gears
-	private float shift;			//A counter used to stop acceleration while shifting gears
-	private boolean shifting;		//A boolean that is on when shifting gears and off otherwise
-	private int previousGear;		//Index of previous gear used to figure out whether or not to do a shift timeout
-	private float boostGain;		//A proportion by which to multiply friction speed loss to add to boost
-	private float boostPower;		//The power of boost when applied
-	private float normalfov = 90.0f;//Initialization value for camera fov
+	private Point3D carPos;				//The position of the car
+	private Vector3D carSpeed;			//The velocity of the car
+	private Vector3D carOrientation;	//The orientation of the car
+	private float acceleration[];		//The acceleration of gears 1-5, reverse and braking, gears 1-5 are approximated, but realistic
+	private int topSpeed[];				//The estimated top speed of each gear, scaled to fit world units
+	private float diffRatio;			//A scalar by which to multiply acceleration, much like how gear ratios and drive ratios work in real life
+	private float shiftTime;			//A constant up to which to count when shifting gears
+	private float shift;				//A counter used to stop acceleration while shifting gears
+	private boolean shifting;			//A boolean that is on when shifting gears and off otherwise
+	private int previousGear;			//Index of previous gear used to figure out whether or not to do a shift timeout
+	private float boostGain;			//A proportion by which to multiply friction speed loss to add to boost
+	private float boostPower;			//The power of boost when applied
+	private float normalfov = 90.0f;	//Initialization value for camera fov
 	private float fov = normalfov;		//Camera field of view
 	private float maximumSteeringAngle;	//The angle by which to steer the car. Could be a maximum if input weren't binary
-	private float minDriftSpeed;	//Minimum driving speed to initiate a drift
-	private boolean drifting;		//A boolean that is on while drifting and off otherwise
+	private float minDriftSpeed;		//Minimum driving speed to initiate a drift
+	private boolean drifting;			//A boolean that is on while drifting and off otherwise
 	private boolean gripping;	//A boolean that is on while the user intends to drift. This increases maximum steering angle, despite a lack of "grip"
-	private float accumulatedDriftBoost;	//A counter that adds up all the speed you've lost to friction, a fraction of
-										//which multiplied by a scalar will be re-applied to the car as a boost
-	//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) 
-	//by Victor Faria(https://sketchfab.com/IamBiscoito) 
-	//is licensed under CC Attribution(http://creativecommons.org/licenses/by/4.0/)
-	MeshModel corolla;
+	private float accumulatedDriftBoost;//A counter that adds up all the speed you've lost to friction, a fraction of which will accumulate as boost
+	
+	MeshModel corolla;		//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) 
+							//by Victor Faria(https://sketchfab.com/IamBiscoito) 
+							//is licensed under CC Attribution(http://creativecommons.org/licenses/by/4.0/)
 	Texture road;
 	Texture skyBox;
 	float[] roadUV = {
@@ -242,7 +241,6 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		}
 		carSpeed.add(carOrientation);
 		carOrientation.normalize();
-		//System.out.println("Boost" + accumulatedDriftLoss);
 	}
 	private void turn(float steeringAngle) {
 		if(carSpeed.length() < 5) {
@@ -256,7 +254,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		turnVector(carOrientation, steeringAngle);
 		if(!drifting) {
 			if(carSpeed.length() > minDriftSpeed & !gripping) {
-				steeringAngle *= 0.55f;	//TODO: Maybe make this dependant on speed
+				steeringAngle *= 0.55f;	//TODO: Maybe make this dependent on speed
 			}
 			turnVector(carSpeed, steeringAngle);
 		}
@@ -402,7 +400,6 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	{
 		float deltaTime = Gdx.graphics.getDeltaTime();
 		input(deltaTime);
-		//TODO: Turn carVelocity while drifting. Also, refactor once there is no need for the debug print lines
 		drift(deltaTime);		//Determine if the car is in a drift and perform maths to apply to it's speed if it is
 		moveCar(deltaTime);		//Move car along carVelocity
 		shift(deltaTime);		//Timeout if changing gears

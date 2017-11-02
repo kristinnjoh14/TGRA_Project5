@@ -365,12 +365,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			Gdx.app.exit();
 		}*/
 	}
-	
-	private void update()
-	{
-		float deltaTime = Gdx.graphics.getDeltaTime();
-		input(deltaTime);
-		//TODO: Turn carVelocity while drifting. Also, refactor once there is no need for the debug print lines
+	private void drift(float deltaTime) { 
 		Vector3D tmp = new Vector3D(carSpeed.x, carSpeed.y, carSpeed.z);
 		float dot = 0;
 		float len = tmp.length();
@@ -385,7 +380,12 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				} else {
 					carSpeed.add(tmp);
 				}
-				//turnVector(carSpeed, dot*targetSteeringAngleBySpeed()*deltaTime);	//TODO: figure out which direction to correct drift speed and do it
+				Vector3D cross = carSpeed.cross(carOrientation);	//Cross product used to determine if right or left drift
+				float ang = targetSteeringAngleBySpeed();
+				if(cross.dot(new Vector3D(0,1,0)) > 0) {
+					ang = -ang;
+				}
+				turnVector(carSpeed, dot*ang*deltaTime);	//carSpeed rotated toward carOrientation by an amount proportional to drift angle
 				accumulatedDriftBoost += tmp.length()*boostGain;
 			} else {
 				if(gripping) {
@@ -396,12 +396,18 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				drifting = false;
 			}
 		}
+	}
+	
+	private void update()
+	{
+		float deltaTime = Gdx.graphics.getDeltaTime();
+		input(deltaTime);
+		//TODO: Turn carVelocity while drifting. Also, refactor once there is no need for the debug print lines
+		drift(deltaTime);		//Determine if the car is in a drift and perform maths to apply to it's speed if it is
 		moveCar(deltaTime);		//Move car along carVelocity
 		shift(deltaTime);		//Timeout if changing gears
 		updateFov(deltaTime);	//Slowly set camera to the fov of the current speed
 		gripping = true;		//Reset the grip bool for the next frame
-		System.out.print(dot+" : ");
-		System.out.println(carSpeed.length());
 	}
 	private void display()
 	{

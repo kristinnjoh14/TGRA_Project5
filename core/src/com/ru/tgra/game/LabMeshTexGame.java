@@ -1,5 +1,6 @@
 package com.ru.tgra.game;
 
+
 import java.util.Random;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -8,19 +9,30 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Graphics.DisplayMode;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.audio.*;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.TextureData;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.ru.tgra.graphics.*;
 import com.ru.tgra.graphics.shapes.*;
 import com.ru.tgra.graphics.shapes.g3djmodel.G3DJModelLoader;
 import com.ru.tgra.graphics.shapes.g3djmodel.MeshModel;
 
 public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor {
+
 	Shader shader;
+
 	private Camera cam;
 	//private Camera topCam;			//Hypothetical future roadmap
+	
 	private Point3D carPos;				//The position of the car
 	private Vector3D carSpeed;			//The velocity of the car
 	private Vector3D carOrientation;	//The orientation of the car
@@ -40,7 +52,10 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private boolean drifting;			//A boolean that is on while drifting and off otherwise
 	private boolean gripping;	//A boolean that is on while the user intends to drift. This increases maximum steering angle, despite a lack of "grip"
 	private float accumulatedDriftBoost;//A counter that adds up all the speed you've lost to friction, a fraction of which will accumulate as boost
-	
+	private Sound sound; 		//Ingame music
+	private SpriteBatch batch;
+	private OrthographicCamera camera;
+
 	MeshModel corolla;		//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) 
 							//by Victor Faria(https://sketchfab.com/IamBiscoito) 
 							//is licensed under CC Attribution(http://creativecommons.org/licenses/by/4.0/)
@@ -115,7 +130,10 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		road = new Texture(Gdx.files.internal("textures/road.jpg"));
 
 		corolla = G3DJModelLoader.loadG3DJFromFile("AE86smooth.g3dj");
-
+		
+		sound = Gdx.audio.newSound(Gdx.files.internal("sounds/90.wav"));
+		sound.play();
+		sound.loop();
 		BoxGraphic.create();
 		SphereGraphic.create();
 
@@ -125,7 +143,11 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 
 		cam = new Camera();
 		cam.look(new Point3D(3f, 4f, -3f), new Point3D(0,4,0), new Vector3D(0,1,0));
-
+		
+		camera = new OrthographicCamera();
+	    camera.setToOrtho(true, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+	    batch = new SpriteBatch();
+		
 		//topCam = new Camera();
 		//orthoCam.orthographicProjection(-5, 5, -5, 5, 3.0f, 100);
 		//topCam.perspectiveProjection(30.0f, 1, 3, 100);
@@ -415,8 +437,12 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		//Gdx.gl.glBlendFunc(GL20.GL_ONE, GL20.GL_ONE);
 		//Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
 */
-	
+		
+		//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		
+	    //glScissor(Gdx.graphics.getWidth()*0.75f, Gdx.graphics.getHeight()*0.6f, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+		
 		
 		cam.perspectiveProjection(fov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 700.0f);
 		cam.look(new Point3D(carPos.x-carOrientation.x*5, carPos.y+2, carPos.z-carOrientation.z*5), carPos, new Vector3D(0,1,0));
@@ -468,12 +494,30 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		ModelMatrix.main.pushMatrix();
 		ModelMatrix.main.addTranslation(0, -2, 0);
 		ModelMatrix.main.addScale(50, 1, 50);
-		ModelMatrix.main.addRotationY(180);
 		shader.setModelMatrix(ModelMatrix.main.getMatrix());
 		BoxGraphic.setUVArray(roadUV);
 		BoxGraphic.drawSolidCube(shader, road);
 		BoxGraphic.defaultUVArray();
 		ModelMatrix.main.popMatrix();
+		
+		Gdx.gl.glViewport(3*Gdx.graphics.getWidth()/4, 0, Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/4);
+		//do all actual drawing and rendering here
+		Rectangle scissors = new Rectangle(3*Gdx.graphics.getWidth()/4, 0.2f*Gdx.graphics.getHeight()/4, Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/4);
+		ScissorStack.pushScissors(scissors);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		
+		ModelMatrix.main.loadIdentityMatrix();
+		ModelMatrix.main.pushMatrix();
+		ModelMatrix.main.addScale(1.85f, 1.85f, 1.85f);
+		shader.setModelMatrix(ModelMatrix.main.getMatrix());
+		ModelMatrix.main.popMatrix();
+		BoxGraphic.drawSolidCube(shader, skyBox);
+		
+		
+		ScissorStack.popScissors();
+		
+		
+		
 	}
 	@Override
 	public void render () {

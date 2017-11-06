@@ -32,7 +32,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 
 	private Camera cam;
 	//private Camera topCam;			//Hypothetical future roadmap
-	
+	private Camera camera;
 	private Point3D carPos;				//The position of the car
 	private Vector3D carSpeed;			//The velocity of the car
 	private Vector3D carOrientation;	//The orientation of the car
@@ -55,13 +55,13 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private float accumulatedDriftBoost;//A counter that adds up all the speed you've lost to friction, a fraction of which will accumulate as boost
 	private Sound sound; 		//Ingame music
 	private SpriteBatch batch;
-	private OrthographicCamera camera;
 
 	MeshModel corolla;		//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) 
 							//by Victor Faria(https://sketchfab.com/IamBiscoito) 
 							//is licensed under CC Attribution(http://creativecommons.org/licenses/by/4.0/)
 	Texture road;
 	Texture skyBox;
+	Texture arrow;
 	float[] roadUV = {
 			0,0,
 			0,0,
@@ -82,6 +82,37 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			1,0,
 			1,1,
 			0,1,
+			
+			0,0,
+			0,0,
+			0,0,
+			0,0,
+			
+			0,0,
+			0,0,
+			0,0,
+			0,0,
+	};
+	float[] speedUV = {
+			0,0,
+			0,0,
+			0,0,
+			0,0,
+			
+			0,0,
+			1,0,
+			1,1,
+			0,1,
+			
+			0,0,
+			0,0,
+			0,0,
+			0,0,
+			
+			0,0,
+			0,0,
+			0,0,
+			0,0,
 			
 			0,0,
 			0,0,
@@ -129,6 +160,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		
 		skyBox = new Texture(Gdx.files.internal("textures/cloudySeaBinary.jpg"));
 		road = new Texture(Gdx.files.internal("textures/road.jpg"));
+		arrow = new Texture(Gdx.files.internal("textures/arrow.png"));
 
 		corolla = G3DJModelLoader.loadG3DJFromFile("AE86smooth.g3dj");
 		
@@ -145,12 +177,13 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		cam = new Camera();
 		cam.look(new Point3D(3f, 4f, -3f), new Point3D(0,4,0), new Vector3D(0,1,0));
 		
-		camera = new OrthographicCamera();
-	    camera.setToOrtho(true, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-	    batch = new SpriteBatch();
+		camera = new Camera();
+		camera.perspectiveProjection(normalfov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 100.0f);
+
+	   // batch = new SpriteBatch();
 		
 		//topCam = new Camera();
-		//orthoCam.orthographicProjection(-5, 5, -5, 5, 3.0f, 100);
+		//camera.orthographicProjection(-5, 5, -5, 5, 3.0f, 100);
 		//topCam.perspectiveProjection(30.0f, 1, 3, 100);
 
 		Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -163,8 +196,34 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		}
 	}
 	private void moveCar(float deltaTime) {
-		Vector3D tmp = new Vector3D(carSpeed.x, carSpeed.y, carSpeed.z);
+		Vector3D tmp;
+		if(carPos.z <= -13)
+		{
+			carPos.z = -8;
+			carSpeed.z = 0;
+			carSpeed.x = 0;
+		}
+		if(carPos.z >= 2983)
+		{
+			carPos.z = 2978f;
+			carSpeed.z = 0;
+			carSpeed.x = 0;
+		}
+		if(carPos.x <= -13)
+		{
+			carPos.x = -8;
+			carSpeed.x = 0;
+			carSpeed.z = 0;
+		}
+		if(carPos.x >= 43)
+		{
+			carPos.x = 38;
+			carSpeed.x = 0;
+			carSpeed.z = 0;
+		}
+		tmp = new Vector3D(carSpeed.x, carSpeed.y, carSpeed.z);
 		tmp.scale(deltaTime);
+		
 		carPos.add(tmp);
 	}
 	private void shift(float deltaTime) {	//timeout until deltaTime accumulates 0.35 (350 milliseconds)
@@ -326,7 +385,12 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			}
 		}
 		if(Gdx.input.isKeyJustPressed(Input.Keys.T)) {
-			chaseCam = true;
+			if(chaseCam == false)
+			{
+				chaseCam = true;
+			}else{
+				chaseCam = false;
+			}
 		}
 		if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))
 		{
@@ -443,100 +507,134 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	}
 	private void display()
 	{
-		//do all actual drawing and rendering here
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		for(int j = 0; j < 2; j++)
+		{
+			if(j == 0)
+			{
+				//do all actual drawing and rendering here
+				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+		
+				Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+				//Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
+		/*
+				Gdx.gl.glEnable(GL20.GL_BLEND);
+				Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+				//Gdx.gl.glBlendFunc(GL20.GL_ONE, GL20.GL_ONE);
+				//Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
+		*/
+				
+				//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+				
+			    //glScissor(Gdx.graphics.getWidth()*0.75f, Gdx.graphics.getHeight()*0.6f, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
+				Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+				
+				
+				cam.perspectiveProjection(fov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 700.0f);
+				if(chaseCam && carSpeed.length() > 1) {
+					Vector3D tmp = new Vector3D(carSpeed.x, carSpeed.y, carSpeed.z);
+					tmp.normalize();
+					cam.look(new Point3D(carPos.x-tmp.x*5, carPos.y+2, carPos.z-tmp.z*5), carPos, new Vector3D(0,1,0));
+				} else {
+					cam.look(new Point3D(carPos.x-carOrientation.x*5, carPos.y+2, carPos.z-carOrientation.z*5), carPos, new Vector3D(0,1,0));
+		
+				}
+				shader.setViewMatrix(cam.getViewMatrix());
+				shader.setProjectionMatrix(cam.getProjectionMatrix());
+				shader.setEyePosition(cam.eye.x, cam.eye.y, cam.eye.z, 1.0f);
+		
+				ModelMatrix.main.loadIdentityMatrix();
+		
+				shader.setLightPosition(cam.eye.x,cam.eye.y,cam.eye.z, 1.0f);
+		
+				shader.setSpotDirection(-cam.n.x, -cam.n.y, -cam.n.z, 0.0f);
+				shader.setSpotExponent(3f);
+				shader.setConstantAttenuation(0.2f);
+				shader.setLinearAttenuation(0.0f);
+				shader.setQuadraticAttenuation(0.1f);
+		
+				shader.setLightColor(0.8f, 0.7f, 0.65f, 1.0f);
+				
+				shader.setGlobalAmbient(0.3f, 0.3f, 0.3f, 1);
+		
+				shader.setMaterialDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
+				shader.setMaterialSpecular(1.0f, 1.0f, 1.0f, 1.0f);
+				shader.setMaterialEmission(0, 0, 0, 1);
+				shader.setShininess(50.0f);
+				
+				//Draw skybox
+				ModelMatrix.main.pushMatrix();
+				ModelMatrix.main.addTranslation(cam.eye.x, cam.eye.y, cam.eye.z);
+				ModelMatrix.main.addScale(800, 800, 800);
+				shader.setModelMatrix(ModelMatrix.main.getMatrix());
+				BoxGraphic.drawSolidCube(shader, skyBox);
+				ModelMatrix.main.popMatrix();
+		
+				//Draw car
+				float angle = (float)((180/Math.PI)*Math.acos(carOrientation.dot(new Vector3D(0,0,1))));
+				if(carOrientation.x < 0)
+					angle = -angle;
+				ModelMatrix.main.pushMatrix();
+				ModelMatrix.main.addTranslation(carPos.x, carPos.y, carPos.z);
+				ModelMatrix.main.addScale(0.5f, 0.5f, 0.5f);
+				ModelMatrix.main.addRotationY(angle);
+				shader.setModelMatrix(ModelMatrix.main.getMatrix());
+				corolla.draw(shader);
+		
+				ModelMatrix.main.popMatrix();
+			
+				int size = 30;
+		
+				//Draw road
+				for(int i = 0; i < 100; i++)
+				{
+					ModelMatrix.main.pushMatrix();
+					ModelMatrix.main.addTranslation(0, -2, i*size-0.5f);
+					ModelMatrix.main.addScale(size, 1, size);
+					shader.setModelMatrix(ModelMatrix.main.getMatrix());
+					BoxGraphic.setUVArray(roadUV);
+					BoxGraphic.drawSolidCube(shader, road);
+					BoxGraphic.defaultUVArray();
+					ModelMatrix.main.popMatrix();
+				}
+				for(int i = 0; i < 100; i++)
+				{
+					ModelMatrix.main.pushMatrix();
+					ModelMatrix.main.addTranslation(size, -2, i*size-0.5f);
+					ModelMatrix.main.addScale(size, 1, size);
+					shader.setModelMatrix(ModelMatrix.main.getMatrix());
+					BoxGraphic.setUVArray(roadUV);
+					BoxGraphic.drawSolidCube(shader, road);
+					BoxGraphic.defaultUVArray();
+					ModelMatrix.main.popMatrix();
+				}
+			}else{
+				Gdx.gl.glViewport(4*Gdx.graphics.getWidth()/5, 0, Gdx.graphics.getWidth()/5, Gdx.graphics.getHeight()/5);
+				camera.look(new Point3D(10,100000,10), new Point3D(10,100000,7), new Vector3D(0,10000,0));
+				Rectangle scissors = new Rectangle(4*Gdx.graphics.getWidth()/5, 0.2f*Gdx.graphics.getHeight()/5, Gdx.graphics.getWidth()/5, Gdx.graphics.getHeight()/5);
+				ScissorStack.pushScissors(scissors);
+				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+				shader.setViewMatrix(camera.getViewMatrix());
+				shader.setProjectionMatrix(camera.getProjectionMatrix());
+				shader.setGlobalAmbient(1, 1, 1, 1);
+				shader.setMaterialSpecular(0, 0, 0, 0);
+				shader.setMaterialDiffuse(0, 0, 0, 0);
+				shader.setMaterialEmission(0, 0, 0, 0);
+				ModelMatrix.main.pushMatrix();
+				ModelMatrix.main.addTranslation(10,100000,7);
+				ModelMatrix.main.addScale(3f, 3f, 3f);
+				ModelMatrix.main.addRotationZ(35-carSpeed.length()*2.9f);
+				
+				shader.setModelMatrix(ModelMatrix.main.getMatrix());
+				BoxGraphic.setUVArray(speedUV);
 
-		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
-		//Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
-/*
-		Gdx.gl.glEnable(GL20.GL_BLEND);
-		Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-		//Gdx.gl.glBlendFunc(GL20.GL_ONE, GL20.GL_ONE);
-		//Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-*/
-		
-		//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-		
-	    //glScissor(Gdx.graphics.getWidth()*0.75f, Gdx.graphics.getHeight()*0.6f, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
-		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		
-		
-		cam.perspectiveProjection(fov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 700.0f);
-		if(chaseCam && carSpeed.length() > 1) {
-			Vector3D tmp = new Vector3D(carSpeed.x, carSpeed.y, carSpeed.z);
-			tmp.normalize();
-			cam.look(new Point3D(carPos.x-tmp.x*5, carPos.y+2, carPos.z-tmp.z*5), carPos, new Vector3D(0,1,0));
-		} else {
-			cam.look(new Point3D(carPos.x-carOrientation.x*5, carPos.y+2, carPos.z-carOrientation.z*5), carPos, new Vector3D(0,1,0));
+				BoxGraphic.drawSolidCube(shader, arrow);
+				BoxGraphic.defaultUVArray();
 
+				ModelMatrix.main.popMatrix();
+				
+				ScissorStack.popScissors();
+			}
 		}
-		shader.setViewMatrix(cam.getViewMatrix());
-		shader.setProjectionMatrix(cam.getProjectionMatrix());
-		shader.setEyePosition(cam.eye.x, cam.eye.y, cam.eye.z, 1.0f);
-
-		ModelMatrix.main.loadIdentityMatrix();
-
-		shader.setLightPosition(cam.eye.x,cam.eye.y,cam.eye.z, 1.0f);
-
-		shader.setSpotDirection(-cam.n.x, -cam.n.y, -cam.n.z, 0.0f);
-		shader.setSpotExponent(3f);
-		shader.setConstantAttenuation(0.2f);
-		shader.setLinearAttenuation(0.0f);
-		shader.setQuadraticAttenuation(0.1f);
-
-		shader.setLightColor(0.8f, 0.7f, 0.65f, 1.0f);
-		
-		shader.setGlobalAmbient(0.3f, 0.3f, 0.3f, 1);
-
-		shader.setMaterialDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
-		shader.setMaterialSpecular(1.0f, 1.0f, 1.0f, 1.0f);
-		shader.setMaterialEmission(0, 0, 0, 1);
-		shader.setShininess(50.0f);
-		
-		//Draw skybox
-		ModelMatrix.main.pushMatrix();
-		ModelMatrix.main.addTranslation(cam.eye.x, cam.eye.y, cam.eye.z);
-		ModelMatrix.main.addScale(800, 800, 800);
-		shader.setModelMatrix(ModelMatrix.main.getMatrix());
-		BoxGraphic.drawSolidCube(shader, skyBox);
-		ModelMatrix.main.popMatrix();
-
-		//Draw car
-		float angle = (float)((180/Math.PI)*Math.acos(carOrientation.dot(new Vector3D(0,0,1))));
-		if(carOrientation.x < 0)
-			angle = -angle;
-		ModelMatrix.main.pushMatrix();
-		ModelMatrix.main.addTranslation(carPos.x, carPos.y, carPos.z);
-		ModelMatrix.main.addScale(0.5f, 0.5f, 0.5f);
-		ModelMatrix.main.addRotationY(angle);
-		shader.setModelMatrix(ModelMatrix.main.getMatrix());
-		corolla.draw(shader);
-
-		ModelMatrix.main.popMatrix();
-		
-		//Draw road
-		ModelMatrix.main.pushMatrix();
-		ModelMatrix.main.addTranslation(0, -2, 0);
-		ModelMatrix.main.addScale(50, 1, 50);
-		shader.setModelMatrix(ModelMatrix.main.getMatrix());
-		BoxGraphic.setUVArray(roadUV);
-		BoxGraphic.drawSolidCube(shader, road);
-		BoxGraphic.defaultUVArray();
-		ModelMatrix.main.popMatrix();
-		
-		Gdx.gl.glViewport(3*Gdx.graphics.getWidth()/4, 0, Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/4);
-		//do all actual drawing and rendering here
-		Rectangle scissors = new Rectangle(3*Gdx.graphics.getWidth()/4, 0.2f*Gdx.graphics.getHeight()/4, Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/4);
-		ScissorStack.pushScissors(scissors);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-		
-		ModelMatrix.main.loadIdentityMatrix();
-		ModelMatrix.main.pushMatrix();
-		ModelMatrix.main.addScale(1.85f, 1.85f, 1.85f);
-		shader.setModelMatrix(ModelMatrix.main.getMatrix());
-		ModelMatrix.main.popMatrix();
-		BoxGraphic.drawSolidCube(shader, skyBox);
-		ScissorStack.popScissors();
 	}
 	@Override
 	public void render () {

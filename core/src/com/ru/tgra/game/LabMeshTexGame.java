@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
+import com.badlogic.gdx.utils.Timer;
 import com.ru.tgra.graphics.*;
 import com.ru.tgra.graphics.shapes.*;
 import com.ru.tgra.graphics.shapes.g3djmodel.G3DJModelLoader;
@@ -50,6 +51,15 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private Sound sound; 		//Ingame music
 	private SpriteBatch batch;
 	private int gear;
+	
+	private Sound gasSong;      //Boost music
+	private Sound shooting;     //Ending music
+	private float[][] grid;     //Create map
+	private int length;
+	private int width;
+	private int size;           //The size of the roads, recommend not going below 30
+	private Timer currTime;     //Timer so the song plays for a limited time
+	private Boolean gasPlaying; //Boolean so the song dosen't start again
 	
 	MeshModel corolla;		//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) 
 							//by Victor Faria(https://sketchfab.com/IamBiscoito) 
@@ -185,6 +195,52 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		camera.perspectiveProjection(normalfov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 100.0f);
 
 		Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		
+		size = 30;
+		 
+		carPos = new Point3D(size/2,0,size/2);
+		gasPlaying = false;
+		gasSong = Gdx.audio.newSound(Gdx.files.internal("sounds/gas.mp3"));
+		currTime = new Timer();
+		
+		width = 11;
+        length = 11;
+        grid = new float[width][length];
+       
+       
+       
+        grid[0][0] = 1;
+        grid[0][1] = 1;
+        grid[0][2] = 1;
+        grid[1][2] = 1;
+        grid[1][3] = 1;
+        grid[1][4] = 1;
+        grid[0][4] = 1;
+        grid[0][5] = 1;
+        grid[0][6] = 1;
+        grid[1][6] = 1;
+        grid[2][6] = 1;
+        grid[3][6] = 1;
+        grid[4][6] = 1;
+        grid[5][6] = 1;
+        grid[6][6] = 1;
+        grid[7][6] = 1;
+        grid[8][6] = 1;
+        grid[9][6] = 1;
+        grid[9][5] = 1;
+        grid[9][4] = 1;
+        grid[8][4] = 1;
+        grid[7][4] = 1;
+        grid[6][4] = 1;
+        grid[6][3] = 1;
+        grid[5][3] = 1;
+        grid[5][2] = 1;
+        grid[5][1] = 1;
+        grid[4][1] = 1;
+        grid[3][1] = 1;
+        grid[3][0] = 1;
+        grid[2][0] = 1;
+        grid[1][0] = 1;
 	}
 	private void maybeBoost(float deltaTime) {
 		if(accumulatedDriftBoost < 1) {
@@ -195,30 +251,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	}
 	private void moveCar(float deltaTime) {
 		Vector3D tmp;
-		if(carPos.z <= -13)
-		{
-			carPos.z = -8;
-			carSpeed.z = 0;
-			carSpeed.x = 0;
-		}
-		if(carPos.z >= 2983)
-		{
-			carPos.z = 2978f;
-			carSpeed.z = 0;
-			carSpeed.x = 0;
-		}
-		if(carPos.x <= -13)
-		{
-			carPos.x = -8;
-			carSpeed.x = 0;
-			carSpeed.z = 0;
-		}
-		if(carPos.x >= 43)
-		{
-			carPos.x = 38;
-			carSpeed.x = 0;
-			carSpeed.z = 0;
-		}
+		checkCollisions();
 		tmp = new Vector3D(carSpeed.x, carSpeed.y, carSpeed.z);
 		tmp.scale(deltaTime);
 		
@@ -438,6 +471,65 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			}
 		}
 	}
+	private void checkCollisions()
+    {
+       
+        float x = carPos.x;
+        float z = carPos.z;
+        x -= x % size;
+        z -= z % size;
+        x = (int) Math.floor(x/size);
+        z = (int) Math.floor(z/size);
+       
+       
+        //System.out.print(x);
+        //System.out.print(" / ");
+        //System.out.println(z);
+        if(x < width && z < length && x > -1 && z > -1) {
+            //west
+            if(grid[(int) x][(int) (z)+1] != 1) {
+                if(carPos.z%size >= size-2)
+                {
+                    carPos.z = z*size+size/2;
+                    carSpeed.x = 0;
+                    carSpeed.z = 0;
+                    fov = normalfov;
+                }
+            }
+            ///east
+            if(z == 0 || grid[(int) x][(int) (z)-1] != 1) {
+                if(carPos.z%size <= 2)
+                {
+                    carPos.z = z*size+size/2;
+                    carSpeed.x = 0;
+                    carSpeed.z = 0;
+                    fov = normalfov;
+                }
+            }
+            //south
+            if(grid[(int) x+1][(int) (z)] != 1) {
+                if(carPos.x%size >= size-2)
+                {
+                    carPos.x = x*size+size/2;
+                    carSpeed.x = 0;
+                    carSpeed.z = 0;
+                    fov = normalfov;
+                }
+            }
+            //north
+            if(x == 0 || grid[(int) x-1][(int) (z)] != 1) {
+                if(carPos.x%size < 2)
+                {
+                    carPos.x = x*size + size/2;
+                    carSpeed.x = 0;
+                    carSpeed.z = 0;
+                    fov = normalfov;
+                }
+            }
+        }
+       
+    }
+	
 	
 	private void update()
 	{
@@ -524,31 +616,23 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		
 				ModelMatrix.main.popMatrix();
 			
-				int size = 30;
-		
-				//Draw road
-					for(int i = 0; i < 100; i++)
-				{
-					ModelMatrix.main.pushMatrix();
-					ModelMatrix.main.addTranslation(0, -2, i*size-0.5f);
-					ModelMatrix.main.addScale(size, 1, size);
-					shader.setModelMatrix(ModelMatrix.main.getMatrix());
-					BoxGraphic.setUVArray(roadUV);
-					BoxGraphic.drawSolidCube(shader, road);
-					BoxGraphic.defaultUVArray();
-					ModelMatrix.main.popMatrix();
-				}
-				for(int i = 0; i < 100; i++)
-				{
-					ModelMatrix.main.pushMatrix();
-					ModelMatrix.main.addTranslation(size, -2, i*size-0.5f);
-					ModelMatrix.main.addScale(size, 1, size);
-					shader.setModelMatrix(ModelMatrix.main.getMatrix());
-					BoxGraphic.setUVArray(roadUV);
-					BoxGraphic.drawSolidCube(shader, road);
-					BoxGraphic.defaultUVArray();
-					ModelMatrix.main.popMatrix();
-				}
+				for(int i = 0; i < width; i++)
+                {
+                    for(int k = 0; k < length; k++)
+                    {
+                        if(grid[i][k] == 1)
+                        {
+                            ModelMatrix.main.pushMatrix();
+                            ModelMatrix.main.addTranslation(i*size+15, -2, k*size+15);
+                            ModelMatrix.main.addScale(size, 1, size);
+                            shader.setModelMatrix(ModelMatrix.main.getMatrix());
+                            BoxGraphic.setUVArray(roadUV);
+                            BoxGraphic.drawSolidCube(shader, road);
+                            BoxGraphic.defaultUVArray();
+                            ModelMatrix.main.popMatrix();
+                        }  
+                    }
+                }
 			} else {
 				Gdx.gl.glViewport(2*Gdx.graphics.getWidth()/3, 0, Gdx.graphics.getWidth()/3, Gdx.graphics.getHeight()/3);
 				camera.look(new Point3D(9.1f,100000.3f,9.2f), new Point3D(9.1f,100000.3f,7f), new Vector3D(0,10000,0));

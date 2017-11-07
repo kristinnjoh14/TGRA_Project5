@@ -9,15 +9,8 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.Graphics.DisplayMode;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.audio.*;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.TextureData;
-import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
@@ -46,6 +39,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private int previousGear;			//Index of previous gear used to figure out whether or not to do a shift timeout
 	private float boostGain;			//A proportion by which to multiply friction speed loss to add to boost
 	private float boostPower;			//The power of boost when applied
+	private float maxBoost;				//The car's maximum nitrous capacity
 	private float normalfov = 90.0f;	//Initialization value for camera fov
 	private float fov = normalfov;		//Camera field of view
 	private float maximumSteeringAngle;	//The angle by which to steer the car. Could be a maximum if input weren't binary
@@ -59,6 +53,9 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	MeshModel corolla;		//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) 
 							//by Victor Faria(https://sketchfab.com/IamBiscoito) 
 							//is licensed under CC Attribution(http://creativecommons.org/licenses/by/4.0/)
+	MeshModel hayai;		//Speedometer without markings
+	
+	Texture dash;
 	Texture road;
 	Texture skyBox;
 	Texture arrow;
@@ -148,8 +145,9 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		minDriftSpeed = topSpeed[0];
 		drifting = false;
 		
-		boostGain = 1;
+		boostGain = 0.6f;
 		boostPower = 30f;
+		maxBoost = 60;
 		
 		Gdx.input.setInputProcessor(this);
 
@@ -161,8 +159,10 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		skyBox = new Texture(Gdx.files.internal("textures/cloudySeaBinary.jpg"));
 		road = new Texture(Gdx.files.internal("textures/road.jpg"));
 		arrow = new Texture(Gdx.files.internal("textures/arrow.png"));
+		dash = new Texture(Gdx.files.internal("textures/dash.png"));
 
 		corolla = G3DJModelLoader.loadG3DJFromFile("AE86smooth.g3dj");
+		hayai = G3DJModelLoader.loadG3DJFromFile("needle.g3dj");
 		
 		sound = Gdx.audio.newSound(Gdx.files.internal("sounds/90.wav"));
 		//sound.play();
@@ -179,12 +179,6 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		
 		camera = new Camera();
 		camera.perspectiveProjection(normalfov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 100.0f);
-
-	   // batch = new SpriteBatch();
-		
-		//topCam = new Camera();
-		//camera.orthographicProjection(-5, 5, -5, 5, 3.0f, 100);
-		//topCam.perspectiveProjection(30.0f, 1, 3, 100);
 
 		Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	}
@@ -397,61 +391,6 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			Gdx.graphics.setDisplayMode(500, 500, false);
 			Gdx.app.exit();
 		}
-		/*if(Gdx.input.isKeyPressed(Input.Keys.A)) {
-			cam.slide(-3.0f * deltaTime, 0, 0);
-		}
-		if(Gdx.input.isKeyPressed(Input.Keys.D)) {
-			cam.slide(3.0f * deltaTime, 0, 0);
-		}
-		if(Gdx.input.isKeyPressed(Input.Keys.W)) {
-			cam.slide(0, 0, -3.0f * deltaTime);
-			//cam.walkForward(3.0f * deltaTime);
-		}
-		if(Gdx.input.isKeyPressed(Input.Keys.S)) {
-			cam.slide(0, 0, 3.0f * deltaTime);
-			//cam.walkForward(-3.0f * deltaTime);
-		}
-		if(Gdx.input.isKeyPressed(Input.Keys.R)) {
-			cam.slide(0, 3.0f * deltaTime, 0);
-		}
-		if(Gdx.input.isKeyPressed(Input.Keys.F)) {
-			cam.slide(0, -3.0f * deltaTime, 0);
-		}
-
-		if(Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-			cam.yaw(90.0f * deltaTime);
-			//cam.rotateY(90.0f * deltaTime);
-		}
-		if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-			cam.yaw(-90.0f * deltaTime);
-			//cam.rotateY(-90.0f * deltaTime);
-		}
-		if(Gdx.input.isKeyPressed(Input.Keys.UP)) {
-			cam.pitch(90.0f * deltaTime);
-		}
-		if(Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-			cam.pitch(-90.0f * deltaTime);
-		}
-
-		if(Gdx.input.isKeyPressed(Input.Keys.Q)) {
-			cam.roll(-90.0f * deltaTime);
-		}
-		if(Gdx.input.isKeyPressed(Input.Keys.E)) {
-			cam.roll(90.0f * deltaTime);
-		}
-
-		if(Gdx.input.isKeyPressed(Input.Keys.T)) {
-			fov -= 30.0f * deltaTime;
-		}
-		if(Gdx.input.isKeyPressed(Input.Keys.G)) {
-			fov += 30.0f * deltaTime;
-		}
-
-		if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE))
-		{
-			Gdx.graphics.setDisplayMode(500, 500, false);
-			Gdx.app.exit();
-		}*/
 	}
 	private void drift(float deltaTime) { 
 		Vector3D tmp = new Vector3D(carSpeed.x, carSpeed.y, carSpeed.z);
@@ -460,7 +399,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		if(len > 0) {
 			tmp.normalize();
 			dot = tmp.dot(carOrientation);
-			if(dot < 0.9 & dot > -0.5) {
+			if(dot < 0.95 & dot > -0.5) {
 				drifting = true;
 				tmp.scale(acceleration[7]*deltaTime);	//Scale deceleration by drift-grip, stored after braking force
 				if(carSpeed.length() < 1) {
@@ -475,6 +414,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				}
 				turnVector(carSpeed, dot*ang*deltaTime);	//carSpeed rotated toward carOrientation by an amount proportional to drift angle
 				accumulatedDriftBoost += tmp.length()*boostGain;
+				accumulatedDriftBoost = Math.min(maxBoost, accumulatedDriftBoost);
 			} else {
 				if(gripping) {
 					if(dot < 0.999 & dot > -0.5) {
@@ -515,17 +455,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		
 				Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
-				//Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
-		/*
-				Gdx.gl.glEnable(GL20.GL_BLEND);
-				Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-				//Gdx.gl.glBlendFunc(GL20.GL_ONE, GL20.GL_ONE);
-				//Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE);
-		*/
-				
-				//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-				
-			    //glScissor(Gdx.graphics.getWidth()*0.75f, Gdx.graphics.getHeight()*0.6f, Gdx.graphics.getWidth(),Gdx.graphics.getHeight());
+
 				Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 				
 				
@@ -533,9 +463,9 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				if(chaseCam && carSpeed.length() > 1) {
 					Vector3D tmp = new Vector3D(carSpeed.x, carSpeed.y, carSpeed.z);
 					tmp.normalize();
-					cam.look(new Point3D(carPos.x-tmp.x*5, carPos.y+2, carPos.z-tmp.z*5), carPos, new Vector3D(0,1,0));
+					cam.look(new Point3D(carPos.x-tmp.x*6, carPos.y+3.5f, carPos.z-tmp.z*6), carPos, new Vector3D(0,1,0));
 				} else {
-					cam.look(new Point3D(carPos.x-carOrientation.x*5, carPos.y+2, carPos.z-carOrientation.z*5), carPos, new Vector3D(0,1,0));
+					cam.look(new Point3D(carPos.x-carOrientation.x*6, carPos.y+3.5f, carPos.z-carOrientation.z*6), carPos, new Vector3D(0,1,0));
 				}
 				shader.setViewMatrix(cam.getViewMatrix());
 				shader.setProjectionMatrix(cam.getProjectionMatrix());
@@ -552,12 +482,10 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				shader.setRightHeadlightPosition(carPos.x + carOrientation.x*2.1f - headlightShift.x,carPos.y+carOrientation.y*2.1f - headlightShift.y,carPos.z+carOrientation.z*2.1f - headlightShift.z, 1.0f);
 				shader.setHeadlightDirection(carOrientation.x, carOrientation.y, carOrientation.z, 0.0f);
 				shader.setHeadlightExponent(5f);
-				shader.setConstantAttenuation(0.1f);
-				shader.setLinearAttenuation(0.001f);
-				shader.setQuadraticAttenuation(0.01f);
-		
-				//shader.setLightColor(0.8f, 0.7f, 0.65f, 1.0f);
-				
+				shader.setConstantAttenuation(0.05f);
+				shader.setLinearAttenuation(0.005f);
+				shader.setQuadraticAttenuation(0.0001f);
+						
 				shader.setGlobalAmbient(0.2f, 0.2f, 0.2f, 1);
 		
 				shader.setMaterialDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
@@ -613,39 +541,33 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 					BoxGraphic.defaultUVArray();
 					ModelMatrix.main.popMatrix();
 				}
-				//Draw plane
-				/*ModelMatrix.main.pushMatrix();
-				ModelMatrix.main.addTranslation(0, 0, 0);
-				ModelMatrix.main.addScale(5, 5, 5);
-				shader.setModelMatrix(ModelMatrix.main.getMatrix());
-				FloorGraphic.setUVArray(roadUV);
-				FloorGraphic.drawSolidPlane(shader, road);
-				FloorGraphic.defaultUVArray();
-				ModelMatrix.main.popMatrix();*/
-				
-			}else{
-				Gdx.gl.glViewport(4*Gdx.graphics.getWidth()/5, 0, Gdx.graphics.getWidth()/5, Gdx.graphics.getHeight()/5);
-				camera.look(new Point3D(10,100000,10), new Point3D(10,100000,7), new Vector3D(0,10000,0));
-				Rectangle scissors = new Rectangle(4*Gdx.graphics.getWidth()/5, 0.2f*Gdx.graphics.getHeight()/5, Gdx.graphics.getWidth()/5, Gdx.graphics.getHeight()/5);
+			} else {
+				Gdx.gl.glViewport(4*Gdx.graphics.getWidth()/5, 0, Gdx.graphics.getWidth()/5, Gdx.graphics.getHeight()/4);
+				camera.look(new Point3D(10,100000,9), new Point3D(10,100000,7), new Vector3D(0,10000,0));
+				camera.perspectiveProjection(normalfov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 100.0f);
+				Rectangle scissors = new Rectangle(4*Gdx.graphics.getWidth()/5, 0, Gdx.graphics.getWidth()/5, Gdx.graphics.getHeight()/5);
 				ScissorStack.pushScissors(scissors);
 				//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 				shader.setViewMatrix(camera.getViewMatrix());
 				shader.setProjectionMatrix(camera.getProjectionMatrix());
 				shader.setMaterialSpecular(0, 0, 0, 0);
 				shader.setMaterialDiffuse(0, 0, 0, 0);
-				shader.setMaterialAmbient(0, 0, 0, 0);
+				shader.setMaterialAmbient(1, 1, 1, 1);
 				shader.setMaterialEmission(0.8f, 0.8f, 0.8f, 1);
 				ModelMatrix.main.pushMatrix();
-				ModelMatrix.main.addTranslation(10,100000,7);
-				ModelMatrix.main.addScale(3f, 3f, 3f);
-				ModelMatrix.main.addRotationZ(35-carSpeed.length()*2.9f);
-				
+				ModelMatrix.main.addTranslation(11.5f,100000,7);
+				ModelMatrix.main.addScale(0.2f, 0.2f, 0.2f);
+				ModelMatrix.main.addRotationZ(120-carSpeed.length()*2.8f);
 				shader.setModelMatrix(ModelMatrix.main.getMatrix());
-				BoxGraphic.setUVArray(speedUV);
-
-				BoxGraphic.drawSolidCube(shader, arrow);
-				BoxGraphic.defaultUVArray();
-
+				hayai.draw(shader);
+				ModelMatrix.main.popMatrix();
+				
+				ModelMatrix.main.pushMatrix();
+				ModelMatrix.main.addTranslation(8.5f,100000,7);
+				ModelMatrix.main.addScale(0.2f, 0.2f, 0.2f);
+				ModelMatrix.main.addRotationZ(120-accumulatedDriftBoost*4f);
+				shader.setModelMatrix(ModelMatrix.main.getMatrix());
+				hayai.draw(shader);
 				ModelMatrix.main.popMatrix();
 				
 				ScissorStack.popScissors();

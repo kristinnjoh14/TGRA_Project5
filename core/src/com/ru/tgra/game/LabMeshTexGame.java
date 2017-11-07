@@ -49,13 +49,15 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private float accumulatedDriftBoost;//A counter that adds up all the speed you've lost to friction, a fraction of which will accumulate as boost
 	private Sound sound; 		//Ingame music
 	private SpriteBatch batch;
-
+	private int gear;
+	
 	MeshModel corolla;		//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) 
 							//by Victor Faria(https://sketchfab.com/IamBiscoito) 
 							//is licensed under CC Attribution(http://creativecommons.org/licenses/by/4.0/)
-	MeshModel hayai;		//Speedometer without markings
+	MeshModel hayai;		//3D speedo/tach/whatever gauge needle
 	
-	Texture dash;
+	Texture tach;
+	Texture speedo;
 	Texture road;
 	Texture skyBox;
 	Texture arrow;
@@ -138,6 +140,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		};
 		diffRatio = 2.5f;
 		
+		gear = 0;
 		shiftTime = 0.35f;
 		shifting = true;
 		previousGear = -1;
@@ -159,8 +162,9 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		skyBox = new Texture(Gdx.files.internal("textures/cloudySeaBinary.jpg"));
 		road = new Texture(Gdx.files.internal("textures/road.jpg"));
 		arrow = new Texture(Gdx.files.internal("textures/arrow.png"));
-		dash = new Texture(Gdx.files.internal("textures/dash.png"));
-
+		speedo = new Texture(Gdx.files.internal("textures/speedo.png"));
+		tach = new Texture(Gdx.files.internal("textures/tach.png"));
+		
 		corolla = G3DJModelLoader.loadG3DJFromFile("AE86smooth.g3dj");
 		hayai = G3DJModelLoader.loadG3DJFromFile("needle.g3dj");
 		
@@ -357,7 +361,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		}
 		if(Gdx.input.isKeyPressed(Input.Keys.W)) {
 			if(!shifting) {
-				int gear = 0;			//Determine current gear index
+				gear = 0;			//Determine current gear index
 				for(int i = 4; i > -1; i--) {
 					if(carSpeed.length() < topSpeed[i]) {
 						gear = i;
@@ -455,9 +459,11 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		
 				Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
+				
+				Gdx.gl.glEnable(GL20.GL_BLEND);
+				Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 
 				Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-				
 				
 				cam.perspectiveProjection(fov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 700.0f);
 				if(chaseCam && carSpeed.length() > 1) {
@@ -474,7 +480,6 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				ModelMatrix.main.loadIdentityMatrix();
 				
 				shader.setLightPosition(cam.eye.x, cam.eye.y + 52, cam.eye.z, 1);
-				shader.setLightColor(0, 0, 0, 0);	//Could use, but ambient + headlights looks pretty good, fits with the low sun and kind of feel
 				shader.setHeadlightColor(0.8f, 0.7f, 0.65f, 1.0f);
 				Vector3D headlightShift = carOrientation.cross(new Vector3D(0,1,0));
 				headlightShift.scale(0.82f);
@@ -487,12 +492,8 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				shader.setQuadraticAttenuation(0.0001f);
 						
 				shader.setGlobalAmbient(0.2f, 0.2f, 0.2f, 1);
-		
-				shader.setMaterialDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
-				shader.setMaterialSpecular(1.0f, 1.0f, 1.0f, 1.0f);
-				shader.setMaterialAmbient(1, 1, 1, 1);
-				shader.setMaterialShininess(50);
 				
+				shader.setLightColor(0, 0, 0, 1);
 				//Draw skybox
 				shader.setMaterialEmission(0.4f, 0.4f, 0.4f, 1f);
 				ModelMatrix.main.pushMatrix();
@@ -502,7 +503,14 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				BoxGraphic.drawSolidCube(shader, skyBox);
 				ModelMatrix.main.popMatrix();
 				shader.setMaterialEmission(0, 0, 0, 1);
+				
+				shader.setLightColor(0.3f, 0.2f, 0.25f, 0);
 		
+				shader.setMaterialDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
+				shader.setMaterialSpecular(1.0f, 1.0f, 1.0f, 1.0f);
+				shader.setMaterialAmbient(1, 1, 1, 1);
+				shader.setMaterialShininess(50);
+				
 				//Draw car
 				float angle = (float)((180/Math.PI)*Math.acos(carOrientation.dot(new Vector3D(0,0,1))));
 				if(carOrientation.x < 0)
@@ -542,10 +550,10 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 					ModelMatrix.main.popMatrix();
 				}
 			} else {
-				Gdx.gl.glViewport(4*Gdx.graphics.getWidth()/5, 0, Gdx.graphics.getWidth()/5, Gdx.graphics.getHeight()/4);
-				camera.look(new Point3D(10,100000,9), new Point3D(10,100000,7), new Vector3D(0,10000,0));
-				camera.perspectiveProjection(normalfov, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 100.0f);
-				Rectangle scissors = new Rectangle(4*Gdx.graphics.getWidth()/5, 0, Gdx.graphics.getWidth()/5, Gdx.graphics.getHeight()/5);
+				Gdx.gl.glViewport(2*Gdx.graphics.getWidth()/3, 0, Gdx.graphics.getWidth()/3, Gdx.graphics.getHeight()/3);
+				camera.look(new Point3D(9.1f,100000.3f,9.2f), new Point3D(9.1f,100000.3f,7f), new Vector3D(0,10000,0));
+				camera.perspectiveProjection(normalfov+10, (float)Gdx.graphics.getWidth() / (float)(Gdx.graphics.getHeight()), 0.2f, 100.0f);
+				Rectangle scissors = new Rectangle(2*Gdx.graphics.getWidth()/3, 0, Gdx.graphics.getWidth()/3, Gdx.graphics.getHeight()/3);
 				ScissorStack.pushScissors(scissors);
 				//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 				shader.setViewMatrix(camera.getViewMatrix());
@@ -554,22 +562,59 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				shader.setMaterialDiffuse(0, 0, 0, 0);
 				shader.setMaterialAmbient(1, 1, 1, 1);
 				shader.setMaterialEmission(0.8f, 0.8f, 0.8f, 1);
-				ModelMatrix.main.pushMatrix();
-				ModelMatrix.main.addTranslation(11.5f,100000,7);
-				ModelMatrix.main.addScale(0.2f, 0.2f, 0.2f);
-				ModelMatrix.main.addRotationZ(120-carSpeed.length()*2.8f);
-				shader.setModelMatrix(ModelMatrix.main.getMatrix());
-				hayai.draw(shader);
-				ModelMatrix.main.popMatrix();
 				
 				ModelMatrix.main.pushMatrix();
-				ModelMatrix.main.addTranslation(8.5f,100000,7);
-				ModelMatrix.main.addScale(0.2f, 0.2f, 0.2f);
+				ModelMatrix.main.addTranslation(9.25f,100001.5f,7);
+				ModelMatrix.main.addScale(0.19f, 0.19f, 0.19f);
 				ModelMatrix.main.addRotationZ(120-accumulatedDriftBoost*4f);
 				shader.setModelMatrix(ModelMatrix.main.getMatrix());
 				hayai.draw(shader);
 				ModelMatrix.main.popMatrix();
 				
+				shader.setMaterialEmission(1, 1, 1, 1);
+				ModelMatrix.main.pushMatrix();
+				ModelMatrix.main.addTranslation(10.5f,100000,7);
+				ModelMatrix.main.addScale(2f, 2f, 2f);
+				shader.setModelMatrix(ModelMatrix.main.getMatrix());
+				BoxGraphic.setUVArray(speedUV);
+				BoxGraphic.drawSolidCube(shader, speedo);
+				ModelMatrix.main.popMatrix();
+				
+				shader.setMaterialDiffuse(1, 1, 1,0.0f);
+				shader.setMaterialAmbient(1, 1, 1, 0.0f);
+				shader.setMaterialSpecular(1, 1, 1, 0.0f);
+				ModelMatrix.main.pushMatrix();
+				ModelMatrix.main.addTranslation(10.5f,100000,7.01f);
+				ModelMatrix.main.addScale(2f, 2f, 2f);
+				ModelMatrix.main.addRotationZ(48-carSpeed.length()*2.5f);
+				shader.setModelMatrix(ModelMatrix.main.getMatrix());
+				BoxGraphic.drawSolidCube(shader, arrow);
+				ModelMatrix.main.popMatrix();
+				
+				shader.setMaterialDiffuse(1, 1, 1,0.5f);
+				shader.setMaterialAmbient(1, 1, 1, 0.5f);
+				shader.setMaterialSpecular(1, 1, 1, 0.5f);
+				shader.setMaterialEmission(0, 0, 0, 0);
+				ModelMatrix.main.pushMatrix();
+				ModelMatrix.main.addTranslation(8f,100000,7);
+				ModelMatrix.main.addScale(2f, 2f, 2f);
+				shader.setModelMatrix(ModelMatrix.main.getMatrix());
+				BoxGraphic.drawSolidCube(shader, tach);
+				ModelMatrix.main.popMatrix();
+				
+				shader.setMaterialDiffuse(1, 1, 1,0.5f);
+				shader.setMaterialAmbient(1, 1, 1, 0.5f);
+				shader.setMaterialSpecular(1, 1, 1, 0.5f);
+				shader.setMaterialEmission(1, 1, 1, 0);
+				ModelMatrix.main.pushMatrix();
+				ModelMatrix.main.addTranslation(8f,100000,7.01f);
+				ModelMatrix.main.addScale(2f, 2f, 2f);
+				ModelMatrix.main.addRotationZ(20-(carSpeed.length()/topSpeed[gear])*240f);
+				shader.setModelMatrix(ModelMatrix.main.getMatrix());
+				BoxGraphic.drawSolidCube(shader, arrow);
+				BoxGraphic.defaultUVArray();
+				ModelMatrix.main.popMatrix();
+			
 				ScissorStack.popScissors();
 			}
 		}

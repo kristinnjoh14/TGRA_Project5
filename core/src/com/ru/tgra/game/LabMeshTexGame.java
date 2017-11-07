@@ -11,7 +11,9 @@ import com.badlogic.gdx.Graphics.DisplayMode;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.audio.*;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.badlogic.gdx.utils.Timer;
@@ -48,9 +50,9 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private boolean drifting;			//A boolean that is on while drifting and off otherwise
 	private boolean gripping;	//A boolean that is on while the user intends to drift. This increases maximum steering angle, despite a lack of "grip"
 	private float accumulatedDriftBoost;//A counter that adds up all the speed you've lost to friction, a fraction of which will accumulate as boost
-	private Sound sound; 		//Ingame music
-	private SpriteBatch batch;
+	private Sound sound; 				//Ingame music
 	private int gear;
+	private float time = 0;				//Counts the time from start to finish
 	
 	private Sound gasSong;      //Boost music
 	private Sound shooting;     //Ending music
@@ -136,7 +138,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	Random rand = new Random();
 
 	@Override
-	public void create () {
+	public void create () {		
 		carPos = new Point3D(0,0,0);
 		carSpeed = new Vector3D(0,0,0);
 		carOrientation = new Vector3D(0,0,1);
@@ -161,7 +163,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		boostGain = 0.6f;
 		boostPower = 30f;
 		maxBoost = 60;
-		
+				
 		Gdx.input.setInputProcessor(this);
 
 		DisplayMode disp = Gdx.graphics.getDesktopDisplayMode();
@@ -207,7 +209,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
         length = 11;
         grid = new float[width][length];
        
-       
+        //batch = new SpriteBatch();
        
         grid[0][0] = 1;
         grid[0][1] = 1;
@@ -328,7 +330,6 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				if(carSpeed.length() < 5) {
 					carSpeed.scale(0);
 					shifting = true;
-					System.out.println("stopped");
 				}
 			} else {	//If reversing
 				//Scale change to velocity by reverse gear, stored after 5th gear
@@ -403,7 +404,6 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 					}
 				}
 				if(gear != previousGear) {
-					System.out.println(carSpeed.length());
 					shifting = true;
 				}
 				accelerate(true, gear);
@@ -473,7 +473,6 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	}
 	private void checkCollisions()
     {
-       
         float x = carPos.x;
         float z = carPos.z;
         x -= x % size;
@@ -481,10 +480,6 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
         x = (int) Math.floor(x/size);
         z = (int) Math.floor(z/size);
        
-       
-        //System.out.print(x);
-        //System.out.print(" / ");
-        //System.out.println(z);
         if(x < width && z < length && x > -1 && z > -1) {
             //west
             if(grid[(int) x][(int) (z)+1] != 1) {
@@ -530,7 +525,6 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
        
     }
 	
-	
 	private void update()
 	{
 		float deltaTime = Gdx.graphics.getDeltaTime();
@@ -539,6 +533,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		moveCar(deltaTime);		//Move car along carVelocity
 		shift(deltaTime);		//Timeout if changing gears
 		updateFov(deltaTime);	//Slowly set camera to the fov of the current speed
+		time += deltaTime;		//Count the time
 		gripping = true;		//Reset the grip bool for the next frame
 	}
 	private void display()
@@ -570,6 +565,16 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				shader.setEyePosition(cam.eye, 1.0f);
 		
 				ModelMatrix.main.loadIdentityMatrix();
+				/*float[] matrix = new float[16];
+				for(int i = 0; i < 16; i++) {
+					matrix[i] = cam.getProjectionMatrix().get();
+				}
+				cam.getProjectionMatrix().rewind();
+				Matrix4 mat = new Matrix4(matrix);
+				batch.setProjectionMatrix(mat);
+				batch.begin();
+				font.draw(batch, "Hello", Gdx.graphics.getWidth()/2, 10);
+				batch.end();*/
 				
 				shader.setLightPosition(cam.eye.x, cam.eye.y + 52, cam.eye.z, 1);
 				shader.setHeadlightColor(0.8f, 0.7f, 0.65f, 1.0f);

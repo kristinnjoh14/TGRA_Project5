@@ -7,43 +7,47 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 
 public class Shader {
-
+	Shader shader;
+	
 	private int renderingProgramID;
 	private int vertexShaderID;
 	private int fragmentShaderID;
-
-	private int positionLoc;
-	private int normalLoc;
-	private int uvLoc;
 	
-	private int modelMatrixLoc;
-	private int viewMatrixLoc;
-	private int projectionMatrixLoc;
-
 	private boolean usesDiffuseTexture = false;
 	private int usesDiffuseTexLoc;
 	private int diffuseTextureLoc;
 
-	private int eyePosLoc;
+	private int eyePositionLoc;
+	private int positionLoc;
+	private int normalLoc;
+	private int uvLoc;
 
-	private int globalAmbLoc;
-	//private int colorLoc;
-	private int lightPosLoc;
+	private int modelMatrixLoc;
+	private int viewMatrixLoc;
+	private int projectionMatrixLoc;
 
-	private int spotDirLoc;
-	private int spotExpLoc;
-	private int constantAttLoc;
-	private int linearAttLoc;
-	private int quadraticAttLoc;
-	
-	private int lightColorLoc;
-	private int matDifLoc;
-	private int matSpecLoc;
-	private int matShineLoc;
+	private int globalAmbientLoc;
+	private int materialAmbientLoc;
+	private int materialDiffuseLoc;
 	private int matEmissionLoc;
-
-	public Shader()
-	{
+	
+	private int lightDiffuseLoc;
+	private int materialSpecularLoc;
+	private int materialShininessLoc;
+	private int lightSpecularLoc;
+	private int lightPositionLoc;
+	
+	private int headlightSpecularLoc;
+	private int headlightDiffuseLoc;
+	private int leftHeadlightPositionLoc;
+	private int rightHeadlightPositionLoc;
+	private int headlightDirectionLoc;
+	private int linearAttenuationLoc;
+	private int quadraticAttenuationLoc;
+	private int constantAttenuationLoc;
+	private int headlightExponentLoc;
+	
+	public Shader() {
 		String vertexShaderString;
 		String fragmentShaderString;
 
@@ -52,20 +56,20 @@ public class Shader {
 
 		vertexShaderID = Gdx.gl.glCreateShader(GL20.GL_VERTEX_SHADER);
 		fragmentShaderID = Gdx.gl.glCreateShader(GL20.GL_FRAGMENT_SHADER);
-
+	
 		Gdx.gl.glShaderSource(vertexShaderID, vertexShaderString);
 		Gdx.gl.glShaderSource(fragmentShaderID, fragmentShaderString);
-
+	
 		Gdx.gl.glCompileShader(vertexShaderID);
 		Gdx.gl.glCompileShader(fragmentShaderID);
 
-		System.out.println("Vertex shader compile messages:");
+		System.out.println("Vertex shader");
 		System.out.println(Gdx.gl.glGetShaderInfoLog(vertexShaderID));
-		System.out.println("Fragment shader compile messages:");
+		System.out.println("Fragment shader");
 		System.out.println(Gdx.gl.glGetShaderInfoLog(fragmentShaderID));
-
+		
 		renderingProgramID = Gdx.gl.glCreateProgram();
-
+	
 		Gdx.gl.glAttachShader(renderingProgramID, vertexShaderID);
 		Gdx.gl.glAttachShader(renderingProgramID, fragmentShaderID);
 	
@@ -79,36 +83,40 @@ public class Shader {
 
 		uvLoc				= Gdx.gl.glGetAttribLocation(renderingProgramID, "a_uv");
 		Gdx.gl.glEnableVertexAttribArray(uvLoc);
-
+		
 		modelMatrixLoc			= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_modelMatrix");
 		viewMatrixLoc			= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_viewMatrix");
 		projectionMatrixLoc	= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_projectionMatrix");
 
-		usesDiffuseTexLoc		= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_usesDiffuseTexture");
-		diffuseTextureLoc		= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_diffuseTexture");
-
-		eyePosLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_eyePosition");
-
-		globalAmbLoc			= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_globalAmbient");
-
-		lightPosLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_lightPosition");
-
-		spotDirLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_spotDirection");
-		spotExpLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_spotExponent");
-		constantAttLoc			= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_constantAttenuation");
-		linearAttLoc			= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_linearAttenuation");
-		quadraticAttLoc			= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_quadraticAttenuation");
-	
-		lightColorLoc			= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_lightColor");
-		matDifLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_materialDiffuse");
-		matSpecLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_materialSpecular");
-		matShineLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_materialShininess");
+		eyePositionLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_eyePosition");
 		
-		matEmissionLoc			= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_materialEmission");
+		materialAmbientLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_materialAmbient");
+		materialDiffuseLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_materialDiffuse");
+		materialSpecularLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_materialSpecular");
+		materialShininessLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_materialShininess");
+		matEmissionLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_materialEmission");
+		
+		globalAmbientLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_globalAmbient");
+		lightDiffuseLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_lightDiffuse");
+		lightSpecularLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_lightSpecular");
+		lightPositionLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_lightPosition");
+		
+		headlightSpecularLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_headlightSpecular");
+		leftHeadlightPositionLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_leftHeadlightPosition");
+		rightHeadlightPositionLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_rightHeadlightPosition");
 
+		headlightDiffuseLoc					= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_headlightDiffuse");
+		headlightDirectionLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_headlightDirection");
+		headlightExponentLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_headlightExponent");
+		linearAttenuationLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_linearAttenuation");
+		quadraticAttenuationLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_quadraticAttenuation");
+		constantAttenuationLoc				= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_constantAttenuation");
+		
+		usesDiffuseTexLoc					= Gdx.gl.glGetUniformLocation(renderingProgramID, "u_usesDiffuseTexture");
+		diffuseTextureLoc					=Gdx.gl.glGetUniformLocation(renderingProgramID, "u_diffuseTexture");
 		Gdx.gl.glUseProgram(renderingProgramID);
 	}
-
+	
 	public void setDiffuseTexture(Texture tex)
 	{
 		if(tex == null)
@@ -132,87 +140,124 @@ public class Shader {
 	{
 		return (usesDiffuseTexture/* || usesSpecularTexture ... etc.*/);
 	}
-
-
-	public void setEyePosition(float x, float y, float z, float w)
-	{
-		Gdx.gl.glUniform4f(eyePosLoc, x, y, z, w);
+	
+	public void setGlobalAmbient(float r, float g, float b, float a) {
+		Gdx.gl.glUniform4f(globalAmbientLoc, r, g, b, a);
 	}
-	public void setGlobalAmbient(float r, float g, float b, float a)
-	{
-		Gdx.gl.glUniform4f(globalAmbLoc, r, g, b, a);
+	
+	public void setMaterial(Vector3D ambient, Vector3D specular, Vector3D diffuse, int shininess) {
+		this.setMaterialAmbient(ambient.x, ambient.y, ambient.z, 1);
+		this.setMaterialSpecular(specular.x, specular.y, specular.z, 1);
+		this.setMaterialDiffuse(diffuse.x, diffuse.y, diffuse.z, 1);
+		this.setMaterialShininess(shininess);
 	}
-	public void setLightPosition(float x, float y, float z, float w)
-	{
-		Gdx.gl.glUniform4f(lightPosLoc, x, y, z, w);
+	
+	public void setMaterialAmbient(float r, float g, float b, float a) {
+		Gdx.gl.glUniform4f(materialAmbientLoc, r, g, b, a);
 	}
-
-	public void setSpotDirection(float x, float y, float z, float w)
-	{
-		Gdx.gl.glUniform4f(spotDirLoc, x, y, z, w);
+	
+	public void setMaterialSpecular(float r, float g, float b, float a) {
+		Gdx.gl.glUniform4f(materialSpecularLoc, r, g, b, a);
 	}
-	public void setSpotExponent(float exp)
-	{
-		Gdx.gl.glUniform1f(spotExpLoc, exp);
+	
+	public void setMaterialShininess(int shininess) {
+		Gdx.gl.glUniform1f(materialShininessLoc, shininess);
 	}
-	public void setConstantAttenuation(float att)
-	{
-		Gdx.gl.glUniform1f(constantAttLoc, att);
+	
+	public void setMaterialDiffuse(float r, float g, float b, float a) {
+		Gdx.gl.glUniform4f(materialDiffuseLoc, r, g, b, a);
 	}
-	public void setLinearAttenuation(float att)
-	{
-		Gdx.gl.glUniform1f(linearAttLoc, att);
-	}
-	public void setQuadraticAttenuation(float att)
-	{
-		Gdx.gl.glUniform1f(quadraticAttLoc, att);
-	}
-
-	public void setLightColor(float r, float g, float b, float a)
-	{
-		Gdx.gl.glUniform4f(lightColorLoc, r, g, b, a);
-	}
-	public void setMaterialDiffuse(float r, float g, float b, float a)
-	{
-		Gdx.gl.glUniform4f(matDifLoc, r, g, b, a);
-	}
-	public void setMaterialSpecular(float r, float g, float b, float a)
-	{
-		Gdx.gl.glUniform4f(matSpecLoc, r, g, b, a);
-	}
-	public void setShininess(float shine)
-	{
-		Gdx.gl.glUniform1f(matShineLoc, shine);
-	}
+	
 	public void setMaterialEmission(float r, float g, float b, float a)
 	{
 		Gdx.gl.glUniform4f(matEmissionLoc, r, g, b, a);
 	}
-
-
-	public int getVertexPointer()
-	{
+	
+	public void setLightSpecular(float r, float g, float b, float a) {
+		Gdx.gl.glUniform4f(lightSpecularLoc, r, g, b, a);
+	}
+	
+	public void setLightDiffuse(float r, float g, float b, float a) {
+		Gdx.gl.glUniform4f(lightDiffuseLoc, r, g, b, a);
+	}
+	
+	public void setLightColor(float r, float g, float b, float a) {
+		this.setLightDiffuse(r, g, b, a);
+		this.setLightSpecular(r, g, b, a);
+	}
+	
+	public void setLightPosition(float x, float y, float z, float w) {
+		Gdx.gl.glUniform4f(lightPositionLoc, x, y, z, w);
+	}
+	
+	public void setHeadlightSpecular(float r, float g, float b, float a) {
+		Gdx.gl.glUniform4f(headlightSpecularLoc, r, g, b, a);
+	}
+	
+	public void setHeadlightDiffuse(float r, float g, float b, float a) {
+		Gdx.gl.glUniform4f(headlightDiffuseLoc, r, g, b, a);
+	}
+	
+	public void setHeadlightColor(float r, float g, float b, float a) {
+		this.setHeadlightDiffuse(r, g, b, a);
+		this.setHeadlightSpecular(r, g, b, a);
+	}
+	
+	public void setLeftHeadlightPosition(float x, float y, float z, float w) {
+		Gdx.gl.glUniform4f(leftHeadlightPositionLoc, x, y, z, w);
+	}
+	
+	public void setRightHeadlightPosition(float x, float y, float z, float w) {
+		Gdx.gl.glUniform4f(rightHeadlightPositionLoc, x, y, z, w);
+	}
+	
+	public void setHeadlightDirection(float x, float y, float z, float w) {
+		Gdx.gl.glUniform4f(headlightDirectionLoc, x, y, z, w);
+	}
+	
+	public void setLinearAttenuation(float r) {
+		Gdx.gl.glUniform1f(linearAttenuationLoc, r);
+	}
+	
+	public void setQuadraticAttenuation(float r) {
+		Gdx.gl.glUniform1f(quadraticAttenuationLoc, r);
+	}
+	
+	public void setConstantAttenuation(float r) {
+		Gdx.gl.glUniform1f(constantAttenuationLoc, r);
+	}
+	
+	public void setHeadlightExponent(float r) {
+		Gdx.gl.glUniform1f(headlightExponentLoc, r);
+	}
+	
+	public void setEyePosition(Point3D eye, float w) {
+		Gdx.gl.glUniform4f(eyePositionLoc, eye.x, eye.y, eye.z, w);
+	}
+	
+	public int getVertexPointer() {
 		return positionLoc;
 	}
-	public int getNormalPointer()
-	{
+	
+	public int getNormalPointer() {
 		return normalLoc;
 	}
+	
 	public int getUVPointer()
 	{
 		return uvLoc;
 	}
-
-	public void setModelMatrix(FloatBuffer matrix)
-	{
+	
+	public void setModelMatrix(FloatBuffer matrix) {
 		Gdx.gl.glUniformMatrix4fv(modelMatrixLoc, 1, false, matrix);
 	}
-	public void setViewMatrix(FloatBuffer matrix)
-	{
+	
+	public void setViewMatrix(FloatBuffer matrix) {
 		Gdx.gl.glUniformMatrix4fv(viewMatrixLoc, 1, false, matrix);
 	}
-	public void setProjectionMatrix(FloatBuffer matrix)
-	{
+	
+	public void setProjectionMatrix(FloatBuffer matrix) {
 		Gdx.gl.glUniformMatrix4fv(projectionMatrixLoc, 1, false, matrix);
 	}
 }
+

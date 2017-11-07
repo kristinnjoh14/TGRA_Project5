@@ -536,38 +536,44 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 					cam.look(new Point3D(carPos.x-tmp.x*5, carPos.y+2, carPos.z-tmp.z*5), carPos, new Vector3D(0,1,0));
 				} else {
 					cam.look(new Point3D(carPos.x-carOrientation.x*5, carPos.y+2, carPos.z-carOrientation.z*5), carPos, new Vector3D(0,1,0));
-		
 				}
 				shader.setViewMatrix(cam.getViewMatrix());
 				shader.setProjectionMatrix(cam.getProjectionMatrix());
-				shader.setEyePosition(cam.eye.x, cam.eye.y, cam.eye.z, 1.0f);
+				shader.setEyePosition(cam.eye, 1.0f);
 		
 				ModelMatrix.main.loadIdentityMatrix();
-		
-				shader.setLightPosition(cam.eye.x,cam.eye.y,cam.eye.z, 1.0f);
-		
-				shader.setSpotDirection(-cam.n.x, -cam.n.y, -cam.n.z, 0.0f);
-				shader.setSpotExponent(3f);
-				shader.setConstantAttenuation(0.2f);
-				shader.setLinearAttenuation(0.0f);
-				shader.setQuadraticAttenuation(0.1f);
-		
-				shader.setLightColor(0.8f, 0.7f, 0.65f, 1.0f);
 				
-				shader.setGlobalAmbient(0.3f, 0.3f, 0.3f, 1);
+				shader.setLightPosition(cam.eye.x, cam.eye.y + 52, cam.eye.z, 1);
+				shader.setLightColor(0, 0, 0, 0);	//Could use, but ambient + headlights looks pretty good, fits with the low sun and kind of feel
+				shader.setHeadlightColor(0.8f, 0.7f, 0.65f, 1.0f);
+				Vector3D headlightShift = carOrientation.cross(new Vector3D(0,1,0));
+				headlightShift.scale(0.82f);
+				shader.setLeftHeadlightPosition(carPos.x + carOrientation.x*2.1f + headlightShift.x,carPos.y+carOrientation.y*2.1f + headlightShift.y,carPos.z+carOrientation.z*2.1f + headlightShift.z, 1.0f);
+				shader.setRightHeadlightPosition(carPos.x + carOrientation.x*2.1f - headlightShift.x,carPos.y+carOrientation.y*2.1f - headlightShift.y,carPos.z+carOrientation.z*2.1f - headlightShift.z, 1.0f);
+				shader.setHeadlightDirection(carOrientation.x, carOrientation.y, carOrientation.z, 0.0f);
+				shader.setHeadlightExponent(5f);
+				shader.setConstantAttenuation(0.1f);
+				shader.setLinearAttenuation(0.001f);
+				shader.setQuadraticAttenuation(0.01f);
+		
+				//shader.setLightColor(0.8f, 0.7f, 0.65f, 1.0f);
+				
+				shader.setGlobalAmbient(0.2f, 0.2f, 0.2f, 1);
 		
 				shader.setMaterialDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
 				shader.setMaterialSpecular(1.0f, 1.0f, 1.0f, 1.0f);
-				shader.setMaterialEmission(0, 0, 0, 1);
-				shader.setShininess(50.0f);
+				shader.setMaterialAmbient(1, 1, 1, 1);
+				shader.setMaterialShininess(50);
 				
 				//Draw skybox
+				shader.setMaterialEmission(0.4f, 0.4f, 0.4f, 1f);
 				ModelMatrix.main.pushMatrix();
 				ModelMatrix.main.addTranslation(cam.eye.x, cam.eye.y, cam.eye.z);
 				ModelMatrix.main.addScale(800, 800, 800);
 				shader.setModelMatrix(ModelMatrix.main.getMatrix());
 				BoxGraphic.drawSolidCube(shader, skyBox);
 				ModelMatrix.main.popMatrix();
+				shader.setMaterialEmission(0, 0, 0, 1);
 		
 				//Draw car
 				float angle = (float)((180/Math.PI)*Math.acos(carOrientation.dot(new Vector3D(0,0,1))));
@@ -585,7 +591,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				int size = 30;
 		
 				//Draw road
-				for(int i = 0; i < 100; i++)
+					for(int i = 0; i < 100; i++)
 				{
 					ModelMatrix.main.pushMatrix();
 					ModelMatrix.main.addTranslation(0, -2, i*size-0.5f);
@@ -607,18 +613,28 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 					BoxGraphic.defaultUVArray();
 					ModelMatrix.main.popMatrix();
 				}
+				//Draw plane
+				/*ModelMatrix.main.pushMatrix();
+				ModelMatrix.main.addTranslation(0, 0, 0);
+				ModelMatrix.main.addScale(5, 5, 5);
+				shader.setModelMatrix(ModelMatrix.main.getMatrix());
+				FloorGraphic.setUVArray(roadUV);
+				FloorGraphic.drawSolidPlane(shader, road);
+				FloorGraphic.defaultUVArray();
+				ModelMatrix.main.popMatrix();*/
+				
 			}else{
 				Gdx.gl.glViewport(4*Gdx.graphics.getWidth()/5, 0, Gdx.graphics.getWidth()/5, Gdx.graphics.getHeight()/5);
 				camera.look(new Point3D(10,100000,10), new Point3D(10,100000,7), new Vector3D(0,10000,0));
 				Rectangle scissors = new Rectangle(4*Gdx.graphics.getWidth()/5, 0.2f*Gdx.graphics.getHeight()/5, Gdx.graphics.getWidth()/5, Gdx.graphics.getHeight()/5);
 				ScissorStack.pushScissors(scissors);
-				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
+				//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 				shader.setViewMatrix(camera.getViewMatrix());
 				shader.setProjectionMatrix(camera.getProjectionMatrix());
-				shader.setGlobalAmbient(1, 1, 1, 1);
 				shader.setMaterialSpecular(0, 0, 0, 0);
 				shader.setMaterialDiffuse(0, 0, 0, 0);
-				shader.setMaterialEmission(0, 0, 0, 0);
+				shader.setMaterialAmbient(0, 0, 0, 0);
+				shader.setMaterialEmission(0.8f, 0.8f, 0.8f, 1);
 				ModelMatrix.main.pushMatrix();
 				ModelMatrix.main.addTranslation(10,100000,7);
 				ModelMatrix.main.addScale(3f, 3f, 3f);

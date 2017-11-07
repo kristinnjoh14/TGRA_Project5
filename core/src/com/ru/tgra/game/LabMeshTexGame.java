@@ -17,6 +17,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.badlogic.gdx.utils.Timer;
+import com.badlogic.gdx.utils.Timer.Task;
 import com.ru.tgra.graphics.*;
 import com.ru.tgra.graphics.shapes.*;
 import com.ru.tgra.graphics.shapes.g3djmodel.G3DJModelLoader;
@@ -62,6 +63,8 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private int size;           //The size of the roads, recommend not going below 30
 	private Timer currTime;     //Timer so the song plays for a limited time
 	private Boolean gasPlaying; //Boolean so the song dosen't start again
+	private Boolean boolStars;  //Boolean so there won't be song conflict
+
 	
 	MeshModel corolla;		//AE86(https://sketchfab.com/models/0cab0e8b7fe647e9a1e0b434a6da56f1) 
 							//by Victor Faria(https://sketchfab.com/IamBiscoito) 
@@ -204,51 +207,124 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		gasPlaying = false;
 		gasSong = Gdx.audio.newSound(Gdx.files.internal("sounds/gas.mp3"));
 		currTime = new Timer();
-		
-		width = 11;
-        length = 11;
+		boolStars = false;
+		width = 30;
+        length = 30;
         grid = new float[width][length];
        
         //batch = new SpriteBatch();
        
         grid[0][0] = 1;
-        grid[0][1] = 1;
-        grid[0][2] = 1;
-        grid[1][2] = 1;
-        grid[1][3] = 1;
-        grid[1][4] = 1;
-        grid[0][4] = 1;
-        grid[0][5] = 1;
-        grid[0][6] = 1;
-        grid[1][6] = 1;
-        grid[2][6] = 1;
-        grid[3][6] = 1;
-        grid[4][6] = 1;
-        grid[5][6] = 1;
-        grid[6][6] = 1;
-        grid[7][6] = 1;
-        grid[8][6] = 1;
-        grid[9][6] = 1;
-        grid[9][5] = 1;
-        grid[9][4] = 1;
-        grid[8][4] = 1;
-        grid[7][4] = 1;
-        grid[6][4] = 1;
-        grid[6][3] = 1;
-        grid[5][3] = 1;
-        grid[5][2] = 1;
-        grid[5][1] = 1;
-        grid[4][1] = 1;
-        grid[3][1] = 1;
-        grid[3][0] = 1;
-        grid[2][0] = 1;
-        grid[1][0] = 1;
+		grid[0][1] = 1;
+		grid[0][2] = 1;
+		grid[1][2] = 1;
+		grid[1][3] = 1;
+		grid[1][4] = 1;
+		grid[0][4] = 1;
+		grid[0][5] = 1;
+		grid[0][6] = 1;
+		grid[1][6] = 1;
+		grid[2][6] = 1;
+		grid[3][6] = 1;
+		grid[4][6] = 1;
+		grid[5][6] = 1;
+		grid[6][6] = 1;
+		grid[7][6] = 1;
+		grid[8][6] = 1;
+		grid[9][6] = 1;
+		grid[9][5] = 1;
+		grid[9][4] = 1;
+		grid[8][4] = 1;
+		grid[7][4] = 1;
+		grid[6][4] = 1;
+		grid[6][3] = 1;
+		grid[5][3] = 1;
+		grid[5][2] = 1;
+		grid[5][1] = 1;
+		grid[6][1] = 1;
+		grid[7][1] = 1;
+		grid[8][1] = 1;
+		grid[9][1] = 1;
+		grid[9][2] = 1;
+		grid[10][2] = 1;
+		grid[11][2] = 1;
+		grid[12][2] = 1;
+		grid[12][3] = 1;
+		grid[12][4] = 1;
+		grid[12][5] = 1;
+		grid[13][5] = 1;
+		grid[13][6] = 1;
+		grid[13][7] = 1;
+		grid[14][7] = 1;
+		grid[15][7] = 1;
+		grid[16][7] = 1;
+		grid[16][8] = 1;
+		grid[16][9] = 1;
+		grid[15][9] = 1;
+		grid[14][9] = 1;
+		grid[14][10] = 1;
+		grid[14][11] = 1;
+		grid[14][12] = 1;
+		grid[14][13] = 1;
+		grid[15][13] = 1;
+		grid[16][13] = 1;
+		grid[16][12] = 1;
+		grid[16][11] = 1;
+		grid[17][11] = 1;
+		grid[18][11] = 1;
+		grid[19][11] = 1;
+		grid[20][11] = 1;
+		grid[20][12] = 1;
+		grid[20][13] = 1;
+		grid[20][14] = 1;
+		grid[20][15] = 1;
+		grid[20][16] = 1;
+		grid[20][17] = 1;
+		grid[20][18] = 1;
+		grid[21][18] = 1;
+		grid[22][18] = 1;
+		grid[22][19] = 1;
+		grid[22][20] = 1;
+		grid[23][20] = 1;
+		grid[23][21] = 1;
+		grid[24][21] = 1;
+		grid[25][21] = 1;
+		grid[25][20] = 1;
+		grid[25][19] = 1;
+		grid[26][19] = 1;
+		grid[27][19] = 1;
+		grid[27][20] = 1;
+		grid[27][21] = 1;
+		grid[27][22] = 1;
+		grid[27][23] = 1;
+		grid[27][24] = 1;
+		grid[27][25] = 1;
+		grid[26][25] = 1;
+		grid[25][25] = 1;
+		grid[25][24] = 1;
+		grid[24][24] = 1;
 	}
 	private void maybeBoost(float deltaTime) {
 		if(accumulatedDriftBoost < 1) {
 			accumulatedDriftBoost = 0;
 		} else {
 			boost(deltaTime);
+			if(!gasPlaying)
+			{
+				gasPlaying = true;
+				sound.pause();
+				gasSong.play();
+				currTime.scheduleTask(new Task() {
+
+			        public void run() 
+			        {
+			        	gasPlaying = false;
+						gasSong.stop();
+						sound.resume();
+						currTime.clear();
+					}
+			    }, 5.4f);
+			}
 		}
 	}
 	private void moveCar(float deltaTime) {
@@ -258,6 +334,16 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		tmp.scale(deltaTime);
 		
 		carPos.add(tmp);
+		if(!boolStars &&carPos.x >= 24*size-size/2 && carPos.z >= 24*size-size/2 && carPos.x <= 24*size+size/2 && carPos.z <= 24*size+size/2)
+		{
+			boolStars = true;
+			sound.stop();
+			sound = Gdx.audio.newSound(Gdx.files.internal("sounds/stars.wav"));
+
+			sound.play();
+			sound.loop();
+			skyBox = new Texture(Gdx.files.internal("textures/download.jpg"));
+		}
 	}
 	private void shift(float deltaTime) {	//timeout until deltaTime accumulates 0.35 (350 milliseconds)
 		if(shifting) {

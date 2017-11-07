@@ -52,6 +52,9 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private boolean gripping;	//A boolean that is on while the user intends to drift. This increases maximum steering angle, despite a lack of "grip"
 	private float accumulatedDriftBoost;//A counter that adds up all the speed you've lost to friction, a fraction of which will accumulate as boost
 	private Sound sound; 				//Ingame music
+	private Sound engine; 				//Engine noise
+	private long noise;					//Engine noise id	
+
 	private int gear;
 	private float time = 0;				//Counts the time from start to finish
 	
@@ -153,7 +156,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		topSpeed = new int[] {
 			20,34,51,72,84,19,14,14,14
 		};
-		diffRatio = 2.5f;
+		diffRatio = 3f;
 		
 		gear = 0;
 		shiftTime = 0.35f;
@@ -163,7 +166,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		minDriftSpeed = topSpeed[0];
 		drifting = false;
 		
-		boostGain = 0.6f;
+		boostGain = 0.85f;
 		boostPower = 30f;
 		maxBoost = 60;
 				
@@ -184,8 +187,12 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		hayai = G3DJModelLoader.loadG3DJFromFile("needle.g3dj");
 		
 		sound = Gdx.audio.newSound(Gdx.files.internal("sounds/90.wav"));
-		//sound.play();
-		//sound.loop();
+		engine = Gdx.audio.newSound(Gdx.files.internal("sounds/engine.mp3"));
+
+		sound.play();
+		sound.loop();
+		noise = engine.play(1.0f);
+		engine.setLooping(noise, true);
 		BoxGraphic.create();
 		SphereGraphic.create();
 
@@ -211,9 +218,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		width = 30;
         length = 30;
         grid = new float[width][length];
-       
-        //batch = new SpriteBatch();
-       
+              
         grid[0][0] = 1;
 		grid[0][1] = 1;
 		grid[0][2] = 1;
@@ -343,6 +348,9 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			sound.play();
 			sound.loop();
 			skyBox = new Texture(Gdx.files.internal("textures/download.jpg"));
+			shader.setLightColor(0.3f, 0.2f, 0.25f, 1);
+			carOrientation.scale(-1);
+			carSpeed.scale(0);
 		}
 	}
 	private void shift(float deltaTime) {	//timeout until deltaTime accumulates 0.35 (350 milliseconds)
@@ -522,7 +530,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		if(len > 0) {
 			tmp.normalize();
 			dot = tmp.dot(carOrientation);
-			if(dot < 0.95 & dot > -0.5) {
+			if(dot < 0.97 & dot > -0.5) {
 				drifting = true;
 				tmp.scale(acceleration[7]*deltaTime);	//Scale deceleration by drift-grip, stored after braking force
 				if(carSpeed.length() < 1) {
@@ -558,6 +566,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		}
 	}
 	private void checkCollisions()
+
     {
         float x = carPos.x;
         float z = carPos.z;
@@ -610,6 +619,11 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
         }
        
     }
+	private void engineNoise() {
+		System.out.println(noise);
+		engine.setVolume(noise, 0.4f+(carSpeed.length()/topSpeed[gear])/5);
+		engine.setPitch(noise, 0.5f+(carSpeed.length()/topSpeed[gear]));
+	}
 	
 	private void update()
 	{
@@ -619,6 +633,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		moveCar(deltaTime);		//Move car along carVelocity
 		shift(deltaTime);		//Timeout if changing gears
 		updateFov(deltaTime);	//Slowly set camera to the fov of the current speed
+		engineNoise();			//Vroom vroom!
 		time += deltaTime;		//Count the time
 		gripping = true;		//Reset the grip bool for the next frame
 	}
@@ -651,19 +666,9 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				shader.setEyePosition(cam.eye, 1.0f);
 		
 				ModelMatrix.main.loadIdentityMatrix();
-				/*float[] matrix = new float[16];
-				for(int i = 0; i < 16; i++) {
-					matrix[i] = cam.getProjectionMatrix().get();
-				}
-				cam.getProjectionMatrix().rewind();
-				Matrix4 mat = new Matrix4(matrix);
-				batch.setProjectionMatrix(mat);
-				batch.begin();
-				font.draw(batch, "Hello", Gdx.graphics.getWidth()/2, 10);
-				batch.end();*/
 				
 				shader.setLightPosition(cam.eye.x, cam.eye.y + 52, cam.eye.z, 1);
-				shader.setHeadlightColor(0.8f, 0.7f, 0.65f, 1.0f);
+				shader.setHeadlightColor(0.5f, 0.4f, 0.35f, 1.0f);
 				Vector3D headlightShift = carOrientation.cross(new Vector3D(0,1,0));
 				headlightShift.scale(0.82f);
 				shader.setLeftHeadlightPosition(carPos.x + carOrientation.x*2.1f + headlightShift.x,carPos.y+carOrientation.y*2.1f + headlightShift.y,carPos.z+carOrientation.z*2.1f + headlightShift.z, 1.0f);
@@ -687,7 +692,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				ModelMatrix.main.popMatrix();
 				shader.setMaterialEmission(0, 0, 0, 1);
 				
-				shader.setLightColor(0.3f, 0.2f, 0.25f, 0);
+				shader.setLightColor(0.4f, 0.3f, 0.35f, 0);
 		
 				shader.setMaterialDiffuse(1.0f, 1.0f, 1.0f, 1.0f);
 				shader.setMaterialSpecular(1.0f, 1.0f, 1.0f, 1.0f);

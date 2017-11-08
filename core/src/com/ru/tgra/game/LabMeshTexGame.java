@@ -59,7 +59,6 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private float time = 0;				//Counts the time from start to finish
 	
 	private Sound gasSong;      //Boost music
-	private Sound shooting;     //Ending music
 	private float[][] grid;     //Create map
 	private int length;
 	private int width;
@@ -339,7 +338,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		tmp.scale(deltaTime);
 		
 		carPos.add(tmp);
-		if(!boolStars &&carPos.x >= 24*size-size/2 && carPos.z >= 24*size-size/2 && carPos.x <= 24*size+size/2 && carPos.z <= 24*size+size/2)
+		if(!boolStars &&carPos.x >= 24*size && carPos.z >= 24*size && carPos.x <= 25*size && carPos.z <= 25*size)
 		{
 			boolStars = true;
 			sound.stop();
@@ -351,7 +350,26 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			shader.setLightColor(0.3f, 0.2f, 0.25f, 1);
 			carOrientation.scale(-1);
 			carSpeed.scale(0);
+			System.out.println("Time: " + time);
+			time = 0;
 		}
+		if(boolStars &&carPos.x >= 0 && carPos.z >= 0 && carPos.x <= size && carPos.z <= size)
+		{
+			boolStars = false;
+			sound.stop();
+			sound = Gdx.audio.newSound(Gdx.files.internal("sounds/90.wav"));
+
+			sound.play();
+			sound.loop();
+			skyBox = new Texture(Gdx.files.internal("textures/cloudySeaBinary.jpg"));
+			shader.setLightColor(0.4f, 0.3f, 0.35f, 1);
+			carOrientation.scale(-1);
+			carSpeed.scale(0);
+			System.out.println("Time: " + time);
+			time = 0;
+		}
+
+		
 	}
 	private void shift(float deltaTime) {	//timeout until deltaTime accumulates 0.35 (350 milliseconds)
 		if(shifting) {
@@ -620,10 +638,10 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
        
     }
 	private void engineNoise() {
-		System.out.println(noise);
 		engine.setVolume(noise, 0.4f+(carSpeed.length()/topSpeed[gear])/5);
 		engine.setPitch(noise, 0.5f+(carSpeed.length()/topSpeed[gear]));
 	}
+	
 	
 	private void update()
 	{
@@ -806,6 +824,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		display();
 
 	}
+	
 	
 	@Override
 	public boolean keyDown(int keycode) {

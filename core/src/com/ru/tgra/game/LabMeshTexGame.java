@@ -37,6 +37,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private float acceleration[];		//The acceleration of gears 1-5, reverse and braking, gears 1-5 are approximated, but realistic
 	private int topSpeed[];				//The estimated top speed of each gear, scaled to fit world units
 	private float diffRatio;			//A scalar by which to multiply acceleration, much like how gear ratios and drive ratios work in real life
+	private float engineRPM;			//Doesn't really represent rpm, but is used where rpm would
 	private float shiftTime;			//A constant up to which to count when shifting gears
 	private float shift;				//A counter used to stop acceleration while shifting gears
 	private boolean shifting;			//A boolean that is on when shifting gears and off otherwise
@@ -158,7 +159,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		diffRatio = 3f;
 		
 		gear = 0;
-		shiftTime = 0.35f;
+		shiftTime = 0.45f;
 		shifting = true;
 		previousGear = -1;
 		
@@ -313,22 +314,22 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			accumulatedDriftBoost = 0;
 		} else {
 			boost(deltaTime);
-			if(!gasPlaying)
-			{
-				gasPlaying = true;
-				sound.pause();
-				gasSong.play();
-				currTime.scheduleTask(new Task() {
+			// if(!gasPlaying)
+			// {
+			// 	gasPlaying = true;
+			// 	sound.pause();
+			// 	gasSong.play();
+			// 	currTime.scheduleTask(new Task() {
 
-			        public void run() 
-			        {
-			        	gasPlaying = false;
-						gasSong.stop();
-						sound.resume();
-						currTime.clear();
-					}
-			    }, 5.4f);
-			}
+			//         public void run() 
+			//         {
+			//         	gasPlaying = false;
+			// 			gasSong.stop();
+			// 			sound.resume();
+			// 			currTime.clear();
+			// 		}
+			//     }, 5.4f);
+			// }
 		}
 	}
 	private void moveCar(float deltaTime) {
@@ -638,8 +639,16 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
        
     }
 	private void engineNoise() {
-		engine.setVolume(noise, 0.4f+(carSpeed.length()/topSpeed[gear])/5);
-		engine.setPitch(noise, 0.5f+(carSpeed.length()/topSpeed[gear]));
+		engineRPM = carSpeed.length()/topSpeed[gear];
+		if(shifting && gear > 0) {
+			float prevGearRpm = carSpeed.length()/topSpeed[gear-1];
+			engineRPM = this.lerp(prevGearRpm, engineRPM, (shift/shiftTime));
+			engine.setVolume(noise, 0.4f+(engineRPM)/5);
+			engine.setPitch(noise, 0.5f+(engineRPM));
+		} else {
+			engine.setVolume(noise, 0.4f+(engineRPM/5));
+			engine.setPitch(noise, 0.5f+(engineRPM));
+		}
 	}
 	
 	
@@ -807,7 +816,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 				ModelMatrix.main.pushMatrix();
 				ModelMatrix.main.addTranslation(8f,100000,7.01f);
 				ModelMatrix.main.addScale(2f, 2f, 2f);
-				ModelMatrix.main.addRotationZ(20-(carSpeed.length()/topSpeed[gear])*240f);
+				ModelMatrix.main.addRotationZ(20-(engineRPM)*240f);
 				shader.setModelMatrix(ModelMatrix.main.getMatrix());
 				BoxGraphic.drawSolidCube(shader, arrow);
 				BoxGraphic.defaultUVArray();
@@ -817,6 +826,12 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			}
 		}
 	}
+
+	private float lerp(float a, float b, float f) 
+	{
+		return (a * (1.0f - f)) + (b * f);
+	}
+
 	@Override
 	public void render () {
 		//put the code inside the update and display methods, depending on the nature of the code

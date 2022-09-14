@@ -314,22 +314,22 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			accumulatedDriftBoost = 0;
 		} else {
 			boost(deltaTime);
-			// if(!gasPlaying)
-			// {
-			// 	gasPlaying = true;
-			// 	sound.pause();
-			// 	gasSong.play();
-			// 	currTime.scheduleTask(new Task() {
+			if(!gasPlaying)
+			{
+				gasPlaying = true;
+				sound.pause();
+				gasSong.play();
+				currTime.scheduleTask(new Task() {
 
-			//         public void run() 
-			//         {
-			//         	gasPlaying = false;
-			// 			gasSong.stop();
-			// 			sound.resume();
-			// 			currTime.clear();
-			// 		}
-			//     }, 5.4f);
-			// }
+			        public void run() 
+			        {
+			        	gasPlaying = false;
+						gasSong.stop();
+						sound.resume();
+						currTime.clear();
+					}
+			    }, 5.4f);
+			}
 		}
 	}
 	private void moveCar(float deltaTime) {

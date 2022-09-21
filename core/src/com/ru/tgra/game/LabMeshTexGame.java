@@ -52,6 +52,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 	private boolean drifting;			//A boolean that is on while drifting and off otherwise
 	private boolean gripping;	//A boolean that is on while the user intends to drift. This increases maximum steering angle, despite a lack of "grip"
 	private float accumulatedDriftBoost;//A counter that adds up all the speed you've lost to friction, a fraction of which will accumulate as boost
+	private float accumulatedDriftBoostAtStartOfLap;//To know how much boost the player started a lap with
 	private Sound sound; 				//Ingame music
 	private Sound engine; 				//Engine noise
 	private long noise;					//Engine noise id	
@@ -166,6 +167,7 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 		minDriftSpeed = topSpeed[0];
 		drifting = false;
 		
+		accumulatedDriftBoostAtStartOfLap = 0;
 		boostGain = 0.85f;
 		boostPower = 30f;
 		maxBoost = 60;
@@ -351,7 +353,8 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			shader.setLightColor(0.3f, 0.2f, 0.25f, 1);
 			carOrientation.scale(-1);
 			carSpeed.scale(0);
-			System.out.println("Time: " + time);
+			System.out.println("Time(reverse track): " + time + ". Lap started with " + accumulatedDriftBoostAtStartOfLap + " pffts in the boost tank");
+			accumulatedDriftBoostAtStartOfLap = accumulatedDriftBoost;
 			time = 0;
 		}
 		if(boolStars &&carPos.x >= 0 && carPos.z >= 0 && carPos.x <= size && carPos.z <= size)
@@ -366,7 +369,8 @@ public class LabMeshTexGame extends ApplicationAdapter implements InputProcessor
 			shader.setLightColor(0.4f, 0.3f, 0.35f, 1);
 			carOrientation.scale(-1);
 			carSpeed.scale(0);
-			System.out.println("Time: " + time);
+			System.out.println("Time: " + time + ". Lap started with " + accumulatedDriftBoostAtStartOfLap + " pffts in the boost tank");
+			accumulatedDriftBoostAtStartOfLap = accumulatedDriftBoost;
 			time = 0;
 		}
 
